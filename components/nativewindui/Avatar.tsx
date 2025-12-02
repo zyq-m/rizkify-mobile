@@ -21,7 +21,7 @@ function AvatarFallback({ className, ...props }: AvatarPrimitive.FallbackProps) 
   return (
     <AvatarPrimitive.Fallback
       className={cn(
-        'flex h-full w-full items-center justify-center rounded-full bg-muted',
+        'bg-muted flex h-full w-full items-center justify-center rounded-full',
         className
       )}
       {...props}

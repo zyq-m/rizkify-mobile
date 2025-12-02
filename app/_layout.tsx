@@ -4,16 +4,14 @@ import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 
 import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
 import * as Device from 'expo-device';
-import { Link, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Platform, Pressable } from 'react-native';
+import { Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { Icon } from '@/components/nativewindui/Icon';
-import { ThemeToggle } from '@/components/nativewindui/ThemeToggle';
-import { cn } from '@/lib/cn';
 import { useColorScheme } from '@/lib/useColorScheme';
+import { QueryProvider } from '@/providers/QueryProvider';
 import { NAV_THEME } from '@/theme';
+import { Slot } from 'expo-router';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -36,10 +34,11 @@ export default function RootLayout() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <ActionSheetProvider>
           <NavThemeProvider value={NAV_THEME[colorScheme]}>
-            <Stack>
-              <Stack.Screen name="index" options={INDEX_OPTIONS} />
-              <Stack.Screen name="modal" options={MODAL_OPTIONS} />
-            </Stack>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+              <QueryProvider>
+                <Slot />
+              </QueryProvider>
+            </GestureHandlerRootView>
           </NavThemeProvider>
         </ActionSheetProvider>
       </GestureHandlerRootView>
@@ -47,27 +46,3 @@ export default function RootLayout() {
     </>
   );
 }
-
-const INDEX_OPTIONS = {
-  headerLargeTitle: true,
-  headerTransparent: isIos26,
-  title: 'NativewindUI',
-  headerRight: () => <SettingsIcon />,
-} as const;
-
-function SettingsIcon() {
-  return (
-    <Link href="/modal" asChild>
-      <Pressable className={cn('opacity-80 active:opacity-50', isIos26 && 'px-1.5')}>
-        <Icon name="gearshape" className="text-foreground" />
-      </Pressable>
-    </Link>
-  );
-}
-
-const MODAL_OPTIONS = {
-  presentation: 'modal',
-  animation: 'fade_from_bottom', // for android
-  title: 'Settings',
-  headerRight: () => <ThemeToggle />,
-} as const;

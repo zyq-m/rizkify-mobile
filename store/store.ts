@@ -1,15 +1,14 @@
+import { Coords } from '@/app/(screen)/(location)/choose';
 import { create } from 'zustand';
 
-export interface BearState {
-  bears: number;
-  increasePopulation: () => void;
-  removeAllBears: () => void;
-  updateBears: (newBears: number) => void;
-}
+export type CoordStore = {
+  coords?: Coords & { range?: number }; // Add range to coords
+  setCoords: (coords: Coords & { range?: number }) => void;
+  clear: () => void;
+};
 
-export const useStore = create<BearState>((set) => ({
-  bears: 0,
-  increasePopulation: () => set((state) => ({ bears: state.bears + 1 })),
-  removeAllBears: () => set({ bears: 0 }),
-  updateBears: (newBears) => set({ bears: newBears }),
+export const useCoords = create<CoordStore>((set) => ({
+  coords: undefined,
+  clear: () => set({ coords: undefined }),
+  setCoords: (coord) => set({ coords: coord }),
 }));
