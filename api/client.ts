@@ -5,7 +5,7 @@ import { tokenStorage } from '../utils/tokenStorage';
 
 // Create axios instance
 const api = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_API_URL || 'https://your-api.com/api',
+  baseURL: `${process.env.EXPO_PUBLIC_API_URL}/api`,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

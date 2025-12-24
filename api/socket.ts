@@ -7,12 +7,9 @@ class SocketService {
   connect() {
     if (this.socket && this.isConnected) return;
 
-    this.socket = io('http://192.168.0.3:3000', {
+    this.socket = io(process.env.EXPO_PUBLIC_API_URL, {
       transports: ['websocket'],
     });
-    // this.socket = io(process.env.EXPO_PUBLIC_API_URL, {
-    //   transports: ['websocket'],
-    // });
 
     this.socket.on('connect', () => {
       console.log('Connected to server');
