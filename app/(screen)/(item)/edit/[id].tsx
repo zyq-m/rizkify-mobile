@@ -1,5 +1,4 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { isAxiosError } from 'axios';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Camera, ChevronRight, X } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
@@ -88,34 +87,24 @@ export default function EditItemScreen() {
   }, [item, reset, setValue]);
 
   const onSubmit: SubmitHandler<UpdateItemFormT> = async (data) => {
-    const formData = new FormData();
-
-    formData.append('name', data.name);
-    formData.append('quantity', data.quantity);
-    formData.append('categoryId', data.categoryId.toString());
-    formData.append('conditionId', data.conditionId.toString());
-    formData.append('description', data.description.toString());
-    formData.append('expiry', data.expiry.toString());
-    formData.append('location', JSON.stringify(data.location));
-
-    // Add new images
-    data.images?.forEach((img) => {
-      formData.append('newImages', img as any);
-    });
-
-    // Add existing images that should be kept
-    const keptImages = existingImages.filter((img) => !imagesToDelete.includes(img));
-    keptImages.forEach((imgUrl, index) => {
-      formData.append('existingImages', imgUrl);
-    });
-
-    // Add images to delete
-    imagesToDelete.forEach((imgUrl) => {
-      formData.append('imagesToDelete', imgUrl);
-    });
+    const itemData: Record<string, any> = {
+      name: data.name,
+      quantity: parseInt(data.quantity),
+      category_id: data.categoryId.toString(),
+      condition_id: data.conditionId.toString(),
+      description: data.description.toString(),
+      expiry: data.expiry.toString(),
+      location: JSON.stringify(data.location),
+    };
 
     updateItem.mutate(
-      { id, formData },
+      {
+        id,
+        data: itemData,
+        images: data.images || [],
+        existingImages: existingImages.filter((img) => !imagesToDelete.includes(img)),
+        imagesToDelete,
+      },
       {
         onSuccess: () => {
           Alert.alert('Success', 'Item updated successfully!');
@@ -124,15 +113,8 @@ export default function EditItemScreen() {
           router.back();
         },
         onError: (error) => {
-          if (isAxiosError(error)) {
-            console.log('Update error:', error.response?.data);
-            Alert.alert(
-              'Error',
-              error.response?.data?.message || 'Failed to update item. Please try again.'
-            );
-          } else {
-            Alert.alert('Error', 'Failed to update item. Please try again.');
-          }
+          console.log('Update error:', error);
+          Alert.alert('Error', 'Failed to update item. Please try again.');
         },
       }
     );

@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import {
   Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -13,7 +14,6 @@ import {
   View,
 } from 'react-native';
 
-import { socketService } from '@/api/socket';
 import InputForm from '@/components/custom/input-form';
 import { useAuth } from '@/hooks/use-auth';
 import { LoginFormT, loginSchema } from '@/utils/form/login';
@@ -40,7 +40,6 @@ export default function LoginScreen() {
       onSuccess: () => {
         // On successful login
         Alert.alert('Success', 'Welcome back to Rizkify!');
-        socketService.connect();
         router.replace('/(screen)/(drawer)');
       },
 
@@ -70,9 +69,7 @@ export default function LoginScreen() {
         {/* Header Section */}
         <View className="px-6 pb-8 pt-20">
           <View className="mb-2 items-center">
-            <View className="mb-6 h-20 w-20 items-center justify-center rounded-2xl bg-yellow-100">
-              <Text className="text-2xl">🌱</Text>
-            </View>
+            <Image source={require('assets/icon.png')} className="mb-6 h-20 w-20" />
             <Text className="text-center text-3xl font-bold text-gray-900">Welcome Back</Text>
             <Text className="mt-2 text-center text-gray-600">
               Sign in to continue reducing food waste

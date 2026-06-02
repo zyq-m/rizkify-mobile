@@ -1,5 +1,5 @@
 import * as Location from 'expo-location';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 export interface LocationWithAddress {
   coords: Location.LocationObjectCoords;
@@ -18,7 +18,7 @@ export interface LocationWithAddress {
 export default function useLocation() {
   const [location, setLocation] = useState<LocationWithAddress | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   // Function to reverse geocode coordinates to address
   const reverseGeocode = async (latitude: number, longitude: number) => {
@@ -87,16 +87,11 @@ export default function useLocation() {
         address,
       });
     } catch (error) {
-      console.error('Location error:', error);
       setErrorMsg('Unable to get location');
     } finally {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    refreshLocation();
-  }, []);
 
   return {
     location,

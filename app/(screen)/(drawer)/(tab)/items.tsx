@@ -65,7 +65,7 @@ export default function ItemsListScreen() {
           <Search size={20} color="#6B7280" />
           <TextInput
             className="ml-2 flex-1 text-base text-gray-900"
-            placeholder="Search items..."
+            placeholder="Find fresh food near you"
             value={searchQuery}
             onChangeText={setSearchQuery}
           />

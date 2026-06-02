@@ -116,7 +116,7 @@ export default function Category() {
               {/* Item Count */}
               <View className="flex-row items-center">
                 <Text className="text-xs text-gray-500">
-                  {category._count.items} item{category._count.items !== 1 ? 's' : ''}
+                  {category._count?.items ?? 0} item{(category._count?.items ?? 0) !== 1 ? 's' : ''}
                 </Text>
               </View>
 

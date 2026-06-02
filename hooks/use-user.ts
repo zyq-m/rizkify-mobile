@@ -1,79 +1,144 @@
-// src/hooks/useUser.ts
-import { userAPI } from '@/api/service';
+import { supabase } from '@/lib/supabase';
+import { useAuthStore } from '@/store/auth-store';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toCamelCase } from '@/utils/map';
+import { MyItemRes, ReqItemResponse } from '@/api/service';
 
 export const useUser = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuthStore();
 
-  // Get user profile
   const useProfile = () => {
     return useQuery({
       queryKey: ['user', 'profile'],
-      queryFn: () => userAPI.getProfile().then((res) => res.data),
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      queryFn: async () => {
+        if (!user?.id) throw new Error('Not authenticated');
+        const { data, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        if (error) throw error;
+        return toCamelCase(data);
+      },
+      enabled: !!user?.id,
+      staleTime: 5 * 60 * 1000,
     });
   };
 
-  // Update profile
   const useUpdateProfile = () => {
     return useMutation({
-      mutationFn: (data: { name?: string; phone?: string; location?: string }) =>
-        userAPI.updateProfile(data).then((res) => res.data),
+      mutationFn: async (data: { name?: string; phone?: string; location?: any }) => {
+        if (!user?.id) throw new Error('Not authenticated');
+        const { error } = await supabase.from('users').update(data).eq('id', user.id);
+        if (error) throw error;
+      },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['user', 'profile'] });
       },
     });
   };
 
-  // Change password
   const useChangePassword = () => {
     return useMutation({
-      mutationFn: ({
+      mutationFn: async ({
         currentPassword,
         newPassword,
       }: {
         currentPassword: string;
         newPassword: string;
-      }) => userAPI.changePassword({ currentPassword, newPassword }),
+      }) => {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: user?.email || '',
+          password: currentPassword,
+        });
+        if (signInError) throw new Error('Current password is incorrect');
+
+        const { error } = await supabase.auth.updateUser({ password: newPassword });
+        if (error) throw error;
+      },
     });
   };
 
-  // Get user's items
   const useMyItems = () => {
     return useQuery({
       queryKey: ['user', 'items'],
-      queryFn: () => userAPI.getMyItems().then((res) => res.data),
+      queryFn: async () => {
+        if (!user?.id) throw new Error('Not authenticated');
+        const { data, error } = await supabase
+          .from('items')
+          .select('*, images:item_images(*), category:categories(*)')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+
+        return (data || []).map((item: any) => ({
+          ...toCamelCase(item),
+          likeCount: 0,
+          pendingRequestCount: 0,
+        })) as MyItemRes[];
+      },
+      enabled: !!user?.id,
     });
   };
 
-  // Get liked items
   const useLikedItems = () => {
     return useQuery({
       queryKey: ['user', 'liked-items'],
-      queryFn: () => userAPI.getLikedItems().then((res) => res.data),
+      queryFn: async () => {
+        if (!user?.id) throw new Error('Not authenticated');
+        const { data, error } = await supabase
+          .from('liked_items')
+          .select('*, item:items(*, images:item_images(*), category:categories(*))')
+          .eq('user_id', user.id);
+        if (error) throw error;
+        return toCamelCase(data || []);
+      },
+      enabled: !!user?.id,
     });
   };
 
-  // Get requests
   const useMyRequests = () => {
     return useQuery({
       queryKey: ['user', 'requests', 'sent'],
-      queryFn: () => userAPI.getMyRequests().then((res) => res.data),
+      queryFn: async () => {
+        if (!user?.id) throw new Error('Not authenticated');
+        const { data, error } = await supabase
+          .from('item_requests')
+          .select('*, item:items(*, images:item_images(*)), provider:users(*)')
+          .eq('requester_id', user.id);
+        if (error) throw error;
+        return toCamelCase<ReqItemResponse[]>(data || []);
+      },
+      enabled: !!user?.id,
     });
   };
 
   const useReceivedRequests = () => {
     return useQuery({
       queryKey: ['user', 'requests', 'received'],
-      queryFn: () => userAPI.getReceivedRequests().then((res) => res.data),
+      queryFn: async () => {
+        if (!user?.id) throw new Error('Not authenticated');
+        const { data, error } = await supabase
+          .from('item_requests')
+          .select('*, item:items(*, images:item_images(*)), requester:users(*)')
+          .eq('provider_id', user.id);
+        if (error) throw error;
+        return toCamelCase<ReqItemResponse[]>(data || []);
+      },
+      enabled: !!user?.id,
     });
   };
 
-  // Update request status
   const useUpdateRequestStatus = () => {
     return useMutation({
-      mutationFn: ({ requestId, status }: { requestId: string; status: string }) =>
-        userAPI.updateRequestStatus(requestId, status),
+      mutationFn: async ({ requestId, status }: { requestId: string; status: string }) => {
+        const { error } = await supabase
+          .from('item_requests')
+          .update({ status: status as any })
+          .eq('id', requestId);
+        if (error) throw error;
+      },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['user', 'requests'] });
         queryClient.invalidateQueries({ queryKey: ['items'] });

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "930836616742",
+    "project_id": "notification-c20da",
+    "storage_bucket": "notification-c20da.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:930836616742:android:ce5a0b274ecfd6a142f8e7",
+        "android_client_info": {
+          "package_name": "com.zyq.m.rizkify"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDfhl2PUnZGZKJnq3lZ-IvG7RVM-Z52xJw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

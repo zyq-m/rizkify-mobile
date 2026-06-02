@@ -26,7 +26,7 @@ import {
 } from 'react-native';
 
 // Define message type based on your schema
-interface ChatMessage {
+export interface ChatMessage {
   id: string;
   content: string;
   senderId: string;

@@ -3,7 +3,7 @@ import SetSearchLocationModal, { SearchLocation } from '@/components/custom/set-
 import TrendingItemCard from '@/components/custom/trending-item';
 import { useItems } from '@/hooks/use-items';
 import { useUser } from '@/hooks/use-user';
-import { Bell, MapPin, TrendingUp } from 'lucide-react-native';
+import { MapPin, TrendingUp } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
@@ -26,13 +26,13 @@ export default function HomeScreen() {
       <View className="bg-white px-4 py-4">
         <View className="mb-4 flex-row items-center justify-between">
           <View>
-            <Text className="text-2xl font-bold text-gray-900">Hello 👋</Text>
+            <Text className="text-2xl font-bold text-gray-900">Hello {profile?.name}👋</Text>
             <Text className="text-gray-600">Find fresh food near you</Text>
           </View>
-          <Pressable className="relative">
+          {/* <Pressable className="relative">
             <Bell size={24} color="#374151" />
             <View className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-red-500" />
-          </Pressable>
+          </Pressable> */}
         </View>
 
         {/* Location Bar */}

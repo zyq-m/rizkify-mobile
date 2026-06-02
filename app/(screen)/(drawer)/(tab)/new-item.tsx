@@ -9,7 +9,6 @@ import { useLookup } from '@/hooks/use-lookup';
 import usePickImage from '@/hooks/use-pick-image';
 import itemSchema, { ItemFormT } from '@/utils/form/item';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { isAxiosError } from 'axios';
 import { router } from 'expo-router';
 import { Camera, ChevronRight, X } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
@@ -42,35 +41,33 @@ export default function NewItemScreen() {
   const [coords, setCoords] = useState<SearchLocation | null>(null);
 
   const onSubmit: SubmitHandler<ItemFormT> = async (data) => {
-    const formData = new FormData();
-
-    formData.append('name', data.name);
-    formData.append('quantity', data.quantity);
-    formData.append('categoryId', data.categoryId.toString());
-    formData.append('conditionId', data.conditionId.toString());
-    formData.append('description', data.description.toString());
-    formData.append('expiry', data.expiry.toString());
-    formData.append('location', JSON.stringify(data.location));
-
-    data.images.forEach((img) => {
-      formData.append('images', img as any);
-    });
-
-    item.mutate(formData, {
-      onSuccess: () => {
-        Alert.alert('Success', 'Item listed successfully!');
-        clearImages();
-        setCoords(null);
-        reset();
-        router.back();
+    item.mutate(
+      {
+        data: {
+          name: data.name,
+          quantity: parseInt(data.quantity),
+          category_id: data.categoryId.toString(),
+          condition_id: data.conditionId.toString(),
+          description: data.description.toString(),
+          expiry: data.expiry.toString(),
+          location: JSON.stringify(data.location),
+        },
+        images: data.images,
       },
-      onError: (error) => {
-        if (isAxiosError(error)) {
-          console.log('Axios error:', error.response?.data);
-        }
-        Alert.alert('Error', 'Failed to add item. Please try again.');
-      },
-    });
+      {
+        onSuccess: () => {
+          Alert.alert('Success', 'Item listed successfully!');
+          clearImages();
+          setCoords(null);
+          reset();
+          router.back();
+        },
+        onError: (error) => {
+          console.log('Create error:', error);
+          Alert.alert('Error', 'Failed to add item. Please try again.');
+        },
+      }
+    );
   };
 
   useEffect(() => {

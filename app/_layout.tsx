@@ -5,13 +5,17 @@ import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
 import * as Device from 'expo-device';
 import { StatusBar } from 'expo-status-bar';
-import { Platform } from 'react-native';
+import { Platform, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import AnimatedSplashScreen from '@/components/animated-splash-screen';
+import { cn } from '@/lib/cn';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { NAV_THEME } from '@/theme';
-import { Slot } from 'expo-router';
+import { SplashScreen as ExpoSplashScreen, Slot } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { useEffect, useState } from 'react';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -22,6 +26,39 @@ const isIos26 = Platform.select({ default: false, ios: Device.osVersion?.startsW
 
 export default function RootLayout() {
   const { colorScheme, isDarkColorScheme } = useColorScheme();
+  const [isSplashAnimationComplete, setSplashAnimationComplete] = useState(false);
+  const [isAppReady, setAppReady] = useState(false);
+
+  // Simulate app initialization (replace with your actual data loading)
+  useEffect(() => {
+    async function prepare() {
+      try {
+        // Pre-load data, assets, make API calls, etc.
+        await Promise.all([
+          // Add your initialization tasks here
+          new Promise((resolve) => setTimeout(resolve, 3500)), // Example delay
+        ]);
+      } catch (e) {
+        console.warn(e);
+      } finally {
+        setAppReady(true);
+        setSplashAnimationComplete(true);
+      }
+    }
+
+    prepare();
+  }, []);
+
+  // Hide both splash screens when everything is ready
+  useEffect(() => {
+    if (isSplashAnimationComplete && isAppReady) {
+      const hideSplashScreens = async () => {
+        await SplashScreen.hideAsync();
+        await ExpoSplashScreen.hideAsync();
+      };
+      hideSplashScreens();
+    }
+  }, [isSplashAnimationComplete, isAppReady]);
 
   return (
     <>
@@ -29,14 +66,21 @@ export default function RootLayout() {
         key={`root-status-bar-${isDarkColorScheme ? 'light' : 'dark'}`}
         style={isDarkColorScheme ? 'light' : 'dark'}
       />
+      {/* Show animated splash screen until animation completes */}
+      {!isSplashAnimationComplete && (
+        <AnimatedSplashScreen onAnimationFinish={() => setSplashAnimationComplete(true)} />
+      )}
       {/* WRAP YOUR APP WITH ANY ADDITIONAL PROVIDERS HERE */}
       {/* <ExampleProvider> */}
       <GestureHandlerRootView style={{ flex: 1 }}>
         <ActionSheetProvider>
-          <NavThemeProvider value={NAV_THEME[colorScheme]}>
+          <NavThemeProvider value={NAV_THEME['light']}>
             <GestureHandlerRootView style={{ flex: 1 }}>
               <QueryProvider>
-                <Slot />
+                <View
+                  className={cn('flex-1', isSplashAnimationComplete ? 'opacity-1' : 'opacity-0')}>
+                  <Slot />
+                </View>
               </QueryProvider>
             </GestureHandlerRootView>
           </NavThemeProvider>

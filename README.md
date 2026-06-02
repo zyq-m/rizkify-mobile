@@ -163,6 +163,108 @@ expo build:ios
 
 **Note:** Production builds require Expo account and may take 15-30 minutes.
 
+### Schma
+
+```sql
+-- Enums
+CREATE TYPE "UserRole" AS ENUM ('USER', 'ADMIN');
+CREATE TYPE "RequestStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'COMPLETED');
+
+-- Tables
+CREATE TABLE "users" (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  phone TEXT NOT NULL,
+  role "UserRole" DEFAULT 'USER',
+  is_suspended BOOLEAN DEFAULT false,
+  location JSONB,
+  image_url TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+-- Note: password is handled by Supabase Auth automatically
+
+CREATE TABLE "categories" (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT UNIQUE NOT NULL,
+  description TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE "conditions" (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT UNIQUE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE "items" (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL,
+  quantity INT DEFAULT 1,
+  expiry DATE NOT NULL,
+  description TEXT,
+  location JSONB NOT NULL,
+  location_description TEXT,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+  category_id UUID REFERENCES categories(id) ON DELETE CASCADE NOT NULL,
+  condition_id UUID REFERENCES conditions(id) ON DELETE CASCADE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE "item_images" (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  image_url TEXT NOT NULL,
+  item_id UUID REFERENCES items(id) ON DELETE CASCADE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE "liked_items" (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+  item_id UUID REFERENCES items(id) ON DELETE CASCADE NOT NULL,
+  UNIQUE(user_id, item_id)
+);
+
+CREATE TABLE "item_requests" (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  status "RequestStatus" DEFAULT 'PENDING',
+  quantity INT DEFAULT 1,
+  message TEXT,
+  requester_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+  provider_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+  item_id UUID REFERENCES items(id) ON DELETE CASCADE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE "chat_messages" (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  content TEXT NOT NULL,
+  image_url TEXT,
+  is_read BOOLEAN DEFAULT false,
+  sender_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+  receiver_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+  item_request_id UUID REFERENCES item_requests(id) ON DELETE CASCADE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Enable Realtime for chat
+ALTER PUBLICATION supabase_realtime ADD TABLE chat_messages;
+
+```
+
+#### RLS Policies (brief)
+
+You'll need policies like:
+
+- users — can read all, update own
+- items — can read all, insert/update/delete own
+- chat_messages — can read/insert if you're sender or receiver
+
 ---
 
 _Join the movement against food waste! Every meal shared through Rizkify saves resources, reduces emissions, and builds community connections._

@@ -31,9 +31,11 @@ export default function ItemDetails() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isLiked, setIsLiked] = useState(item?.isLiked);
   const [selectedQuantity, setSelectedQuantity] = useState(1);
-  const [showQuantityModal, setShowQuantityModal] = useState(false);
   const [message, setMessage] = useState<string | undefined>(undefined);
   const [disabledReqBtn, setDisable] = useState(false);
+
+  const [showQuantityModal, setShowQuantityModal] = useState(false);
+  const [showGuidelinesModal, setShowGuidelinesModal] = useState(false);
 
   const handleBack = () => {
     router.back();
@@ -342,8 +344,129 @@ export default function ItemDetails() {
                 className="flex-1 rounded-2xl bg-gray-200 py-4">
                 <Text className="text-center font-semibold text-gray-700">Cancel</Text>
               </Pressable>
-              <Pressable onPress={handleRequest} className="flex-1 rounded-2xl bg-yellow-500 py-4">
+              <Pressable
+                onPress={() => {
+                  // First close quantity modal, then show guidelines
+                  setShowQuantityModal(false);
+                  // Add a small delay for smooth transition
+                  setTimeout(() => setShowGuidelinesModal(true), 300);
+                }}
+                className="flex-1 rounded-2xl bg-yellow-500 py-4">
                 <Text className="text-center font-semibold text-white">Confirm</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Guidelines Modal */}
+      <Modal
+        visible={showGuidelinesModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowGuidelinesModal(false)}>
+        <View className="flex-1 items-center justify-center bg-black/50">
+          <View className="mx-4 w-11/12 max-w-sm rounded-3xl bg-white p-6">
+            <Text className="mb-4 text-center text-2xl font-bold text-gray-900">
+              Collection Guidelines
+            </Text>
+
+            <ScrollView className="mb-6 max-h-80" showsVerticalScrollIndicator={false}>
+              {/* DO Section */}
+              <View className="mb-6">
+                <View className="mb-3 flex-row items-center">
+                  <View className="mr-2 h-6 w-6 items-center justify-center rounded-full bg-green-100">
+                    <Text className="font-bold text-green-600">✓</Text>
+                  </View>
+                  <Text className="text-lg font-bold text-green-700">Do</Text>
+                </View>
+
+                <View className="mb-2 flex-row">
+                  <Text className="mr-2 text-green-600">•</Text>
+                  <Text className="flex-1 text-gray-700">
+                    Indicate what time you can collect the item
+                  </Text>
+                </View>
+                <View className="flex-row">
+                  <Text className="mr-2 text-green-600">•</Text>
+                  <Text className="flex-1 text-gray-700">
+                    Inform the owner if you&apos;re running late
+                  </Text>
+                </View>
+              </View>
+
+              {/* DON'T Section */}
+              <View className="mb-6">
+                <View className="mb-3 flex-row items-center">
+                  <View className="mr-2 h-6 w-6 items-center justify-center rounded-full bg-red-100">
+                    <Text className="font-bold text-red-600">✗</Text>
+                  </View>
+                  <Text className="text-lg font-bold text-red-700">Don&apos;t</Text>
+                </View>
+
+                <View className="mb-2 flex-row">
+                  <Text className="mr-2 text-red-600">•</Text>
+                  <Text className="flex-1 text-gray-700">Ask the item to be delivered/posted</Text>
+                </View>
+                <View className="flex-row">
+                  <Text className="mr-2 text-red-600">•</Text>
+                  <Text className="flex-1 text-gray-700">
+                    Get upset if you don&apos;t get something
+                  </Text>
+                </View>
+              </View>
+
+              {/* Collection Checklist */}
+              <View className="mb-6">
+                <View className="mb-3 flex-row items-center">
+                  <View className="mr-2 h-6 w-6 items-center justify-center rounded-full bg-blue-100">
+                    <Text className="font-bold text-blue-600">!</Text>
+                  </View>
+                  <Text className="text-lg font-bold text-blue-700">
+                    Set off for a collection until:
+                  </Text>
+                </View>
+
+                <View className="ml-2">
+                  <View className="mb-2 flex-row">
+                    <Text className="mr-3 font-bold text-gray-900">1.</Text>
+                    <Text className="flex-1 text-gray-700">It&apos;s been confirmed</Text>
+                  </View>
+                  <View className="mb-2 flex-row">
+                    <Text className="mr-3 font-bold text-gray-900">2.</Text>
+                    <Text className="flex-1 text-gray-700">You have the address</Text>
+                  </View>
+                  <View className="flex-row">
+                    <Text className="mr-3 font-bold text-gray-900">3.</Text>
+                    <Text className="flex-1 text-gray-700">There&apos;s an agreed time</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Acknowledgment */}
+              <View className="rounded-xl bg-blue-50 p-4">
+                <Text className="text-center text-sm text-blue-700">
+                  By proceeding, you acknowledge that you&apos;ve read and agree to follow these
+                  guidelines.
+                </Text>
+              </View>
+            </ScrollView>
+
+            {/* Action Buttons */}
+            <View className="flex-row gap-3">
+              <Pressable
+                onPress={() => {
+                  // Go back to quantity modal
+                  setShowGuidelinesModal(false);
+                  setShowQuantityModal(true);
+                }}
+                className="flex-1 rounded-2xl bg-gray-200 py-4">
+                <Text className="text-center font-semibold text-gray-700">Back</Text>
+              </Pressable>
+              <Pressable
+                onPress={handleRequest} // This will handle the actual request
+                className="flex-1 rounded-2xl bg-green-600 py-4">
+                <Text className="text-center font-semibold text-white">I Agree</Text>
               </Pressable>
             </View>
           </View>
