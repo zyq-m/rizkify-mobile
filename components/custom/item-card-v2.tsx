@@ -46,15 +46,13 @@ export default function ItemCard({ item, onPress, onLike }: ItemCardProps) {
       {/* Image Section */}
       <View className="relative">
         {item.images.length && !imageError ? (
-          item.images.map((img) => (
-            <Image
-              key={img.id}
-              source={{ uri: img.imageUrl }}
-              className="h-48 w-full"
-              resizeMode="cover"
-              onError={handleImageError}
-            />
-          ))
+          <Image
+            key={item.images[0].id}
+            source={{ uri: item.images[0].imageUrl }}
+            className="h-48 w-full"
+            resizeMode="cover"
+            onError={handleImageError}
+          />
         ) : (
           <View className="h-48 w-full items-center justify-center bg-gray-200">
             <Package size={48} color="#9CA3AF" />
