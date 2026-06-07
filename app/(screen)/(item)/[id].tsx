@@ -244,7 +244,7 @@ export default function ItemDetails() {
               <Text className="text-xl font-semibold text-gray-900">Location</Text>
               <View className="flex-row items-center gap-2">
                 <MapPin size={20} color="#10b981" />
-                <Text>{item.distanceText} away</Text>
+                <Text>{item.distanceText}</Text>
               </View>
             </View>
             <View className="mt-3 overflow-hidden rounded-lg border border-gray-200">

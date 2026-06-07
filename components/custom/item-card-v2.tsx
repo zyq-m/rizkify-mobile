@@ -106,7 +106,7 @@ export default function ItemCard({ item, onPress, onLike }: ItemCardProps) {
           <Text className="ml-1 flex-1 text-sm text-gray-600" numberOfLines={1}>
             {item.location.address?.split(',')[1]}
           </Text>
-          {item.distanceText && <Text className="text-xs text-gray-500">{item.distanceText} away</Text>}
+          {item.distanceText && <Text className="text-xs text-gray-500">{item.distanceText}</Text>}
         </View>
 
         {/* Meta Info */}
