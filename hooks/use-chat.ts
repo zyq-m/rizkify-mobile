@@ -1,11 +1,13 @@
+import { Conversation, GetMessageRes } from '@/api/service';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/auth-store';
+import { Database } from '@/types/supabase.types';
+import { toCamelCase } from '@/utils/map';
+import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
-import { toCamelCase } from '@/utils/map';
-import { Conversation, GetMessageRes, Message } from '@/api/service';
-import { ChatMessageRow } from '@/types/supabase';
+
+type ChatMessageRow = Database['public']['Tables']['chat_messages']['Row'];
 
 export const useChat = () => {
   const queryClient = useQueryClient();
@@ -19,7 +21,9 @@ export const useChat = () => {
 
         const { data: requests, error } = await supabase
           .from('item_requests')
-          .select('*, item:items(*, images:item_images(*)), requester:users(*), provider:users(*), chats:chat_messages(*)')
+          .select(
+            '*, item:items(*, images:item_images(*)), requester:users(*), provider:users(*), chats:chat_messages(*)'
+          )
           .or(`requester_id.eq.${user.id},provider_id.eq.${user.id}`)
           .order('updated_at', { ascending: false });
         if (error) throw error;
@@ -61,7 +65,7 @@ export const useChat = () => {
                   isRead: lastMsg.is_read,
                   createdAt: lastMsg.created_at,
                 }
-              : undefined as any,
+              : (undefined as any),
             unreadCount,
             totalMessages: messages.length,
             updatedAt: req.updated_at,
@@ -80,7 +84,9 @@ export const useChat = () => {
       queryFn: async () => {
         const { data: request, error } = await supabase
           .from('item_requests')
-          .select('*, item:items(*), requester:users(*), provider:users(*), chats:chat_messages(*, sender:users(*), receiver:users(*))')
+          .select(
+            '*, item:items(*), requester:users(*), provider:users(*), chats:chat_messages(*, sender:users(*), receiver:users(*))'
+          )
           .eq('id', reqItemId)
           .single();
         if (error) throw error;
@@ -127,13 +133,11 @@ export const useChat = () => {
           .upload(fileName, image as any);
         if (uploadError) throw uploadError;
 
-        const { data: { publicUrl } } = supabase.storage
-          .from('items')
-          .getPublicUrl(fileName);
+        const { data: urlData } = await supabase.storage.from('items').getPublicUrl(fileName);
 
         const { error } = await supabase.from('chat_messages').insert({
           content: '',
-          image_url: publicUrl,
+          image_url: urlData.publicUrl,
           sender_id: user.id,
           receiver_id: receiverId,
           item_request_id: requestId,

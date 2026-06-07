@@ -206,7 +206,9 @@ export default function ItemRequest() {
             <Text className="ml-2 font-medium text-gray-700">
               {filter === 'all' ? 'All' : getStatusText(filter)}
             </Text>
-            <ChevronRight size={16} color="#6B7280" className="ml-1" />
+            <View className="ml-1">
+              <ChevronRight size={16} color="#6B7280" />
+            </View>
           </Pressable>
         </View>
 

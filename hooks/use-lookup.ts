@@ -1,7 +1,8 @@
-import { supabase } from '@/lib/supabase';
-import { useQuery } from '@tanstack/react-query';
-import { toCamelCase } from '@/utils/map';
 import { Category, Condition } from '@/api/service';
+import { supabase } from '@/lib/supabase';
+import { toCamelCase } from '@/utils/map';
+import dayjs from 'dayjs';
+import { useQuery } from '@tanstack/react-query';
 
 export const useLookup = () => {
   const useCategories = () => {
@@ -32,12 +33,11 @@ export const useLookup = () => {
     queryKey: ['lookup', 'expiry'],
     queryFn: () =>
       Promise.resolve([
-        { id: '1', label: 'Today', value: 'today' },
-        { id: '2', label: 'Tomorrow', value: 'tomorrow' },
-        { id: '3', label: 'This Week', value: 'this_week' },
-        { id: '4', label: 'Next Week', value: 'next_week' },
-        { id: '5', label: 'This Month', value: 'this_month' },
-        { id: '6', label: 'More than a month', value: 'more_than_month' },
+        { id: '1', label: 'Today', value: dayjs().format('YYYY-MM-DD') },
+        { id: '2', label: 'Tomorrow', value: dayjs().add(1, 'day').format('YYYY-MM-DD') },
+        { id: '3', label: 'This Week', value: dayjs().endOf('week').format('YYYY-MM-DD') },
+        { id: '4', label: 'Next Week', value: dayjs().add(1, 'week').endOf('week').format('YYYY-MM-DD') },
+        { id: '5', label: 'This Month', value: dayjs().endOf('month').format('YYYY-MM-DD') },
       ]),
   });
 

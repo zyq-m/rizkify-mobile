@@ -9,7 +9,6 @@ import { useLookup } from '@/hooks/use-lookup';
 import usePickImage from '@/hooks/use-pick-image';
 import itemSchema, { ItemFormT } from '@/utils/form/item';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { router } from 'expo-router';
 import { Camera, ChevronRight, X } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
@@ -52,15 +51,15 @@ export default function NewItemScreen() {
           expiry: data.expiry.toString(),
           location: JSON.stringify(data.location),
         },
-        images: data.images,
+        images: images,
       },
       {
         onSuccess: () => {
           Alert.alert('Success', 'Item listed successfully!');
-          clearImages();
+          // clearImages();
           setCoords(null);
-          reset();
-          router.back();
+          // reset();
+          // router.back();
         },
         onError: (error) => {
           console.log('Create error:', error);

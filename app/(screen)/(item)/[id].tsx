@@ -117,10 +117,7 @@ export default function ItemDetails() {
 
   return (
     <View className="flex-1 bg-white">
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        className="flex-1"
-        contentContainerStyle={{ paddingBottom: 120 }}>
+      <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
         {/* Image Gallery */}
         <View className="relative">
           {item.images.length > 0 && !imageError ? (
@@ -177,7 +174,7 @@ export default function ItemDetails() {
         </View>
 
         {/* Content */}
-        <View className="px-6 pt-6">
+        <View className="p-6">
           {/* Title and Basic Info */}
           <View className="mb-6">
             <View className="mb-3 flex-row items-start justify-between">
@@ -474,7 +471,7 @@ export default function ItemDetails() {
       </Modal>
 
       {/* Fixed Bottom Action */}
-      <View className="absolute bottom-0 left-0 right-0 border-t border-gray-200 bg-white px-6 py-4">
+      <View className="border-t border-gray-200 bg-white px-6 py-4">
         {/* Show reason when disabled */}
         {disabledReqBtn && (
           <View className="mb-2 rounded-lg bg-gray-100 px-4 py-2">

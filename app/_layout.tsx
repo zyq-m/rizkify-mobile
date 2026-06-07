@@ -62,10 +62,7 @@ export default function RootLayout() {
 
   return (
     <>
-      <StatusBar
-        key={`root-status-bar-${isDarkColorScheme ? 'light' : 'dark'}`}
-        style={isDarkColorScheme ? 'light' : 'dark'}
-      />
+      <StatusBar key={`root-status-bar-${'light'}`} style={'light'} />
       {/* Show animated splash screen until animation completes */}
       {!isSplashAnimationComplete && (
         <AnimatedSplashScreen onAnimationFinish={() => setSplashAnimationComplete(true)} />

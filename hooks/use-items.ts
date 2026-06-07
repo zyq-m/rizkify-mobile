@@ -1,14 +1,24 @@
+import { ItemRequestStatus, ItemResponse, ReqItemResponse, TrendingItemRes } from '@/api/service';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/auth-store';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toCamelCase } from '@/utils/map';
-import { ItemResponse, TrendingItemRes, ItemRequestStatus, ReqItemResponse } from '@/api/service';
+import { calculateDistance, formatDistance } from '@/utils/distance';
+import { useUser } from '@/hooks/use-user';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { decode } from 'base64-arraybuffer';
+import { ImagePickerAsset } from 'expo-image-picker';
 
 export type SortItem = 'latest' | 'nearest' | 'expiring';
 
 export const useItems = () => {
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
+  const { useProfile } = useUser();
+  const { data: profile } = useProfile();
+
+  const userCoords = profile?.location?.latitude != null
+    ? { latitude: profile.location.latitude, longitude: profile.location.longitude }
+    : null;
 
   const useItems = (filters?: {
     categoryId?: string;
@@ -24,7 +34,9 @@ export const useItems = () => {
       queryFn: async () => {
         let query = supabase
           .from('items')
-          .select('*, images:item_images(*), user:users(*), category:categories(*), likedBy:liked_items(*), requests:item_requests(*)');
+          .select(
+            '*, images:item_images(*), user:users(*), category:categories(*), likedBy:liked_items(*), requests:item_requests(*)'
+          );
 
         if (filters?.categoryId) {
           query = query.eq('category_id', filters.categoryId);
@@ -45,12 +57,26 @@ export const useItems = () => {
         const { data, error } = await query;
         if (error) throw error;
 
-        return (data || []).map((item: any) => ({
-          ...toCamelCase(item),
-          isLiked: user ? item.likedBy?.some((l: any) => l.user_id === user.id) ?? false : false,
-          distance: 0,
-          distanceText: '',
-        })) as unknown as ItemResponse[];
+        return (data || []).map((item: any) => {
+          const rawLocation = item.location;
+          const location = typeof rawLocation === 'string' ? JSON.parse(rawLocation) : rawLocation;
+          const itemCoords =
+            location?.latitude != null
+              ? { latitude: location.latitude, longitude: location.longitude }
+              : null;
+          const distance =
+            userCoords && itemCoords ? calculateDistance(userCoords, itemCoords) : Infinity;
+          const distanceText = distance !== Infinity ? formatDistance(distance) : '';
+          return {
+            ...toCamelCase(item),
+            location: toCamelCase(location),
+            isLiked: user
+              ? (item.likedBy?.some((l: any) => l.user_id === user.id) ?? false)
+              : false,
+            distance,
+            distanceText,
+          };
+        }) as unknown as ItemResponse[];
       },
     });
   };
@@ -61,20 +87,34 @@ export const useItems = () => {
       queryFn: async () => {
         const { data, error } = await supabase
           .from('items')
-          .select('*, images:item_images(*), user:users(*), category:categories(*), likedBy:liked_items(*), requests:item_requests(*)')
+          .select(
+            '*, images:item_images(*), user:users(*), category:categories(*), likedBy:liked_items(*), requests:item_requests(*)'
+          )
           .order('created_at', { ascending: false })
           .limit(10);
         if (error) throw error;
 
-        return (data || []).map((item: any) => ({
-          ...toCamelCase(item),
-          isLiked: true,
-          likeCount: item.likedBy?.length ?? 0,
-          pendingRequest: item.requests?.filter((r: any) => r.status === 'PENDING').length ?? 0,
-          trendingRank: 0,
-          distance: 0,
-          distanceText: '',
-        })) as unknown as TrendingItemRes[];
+        return (data || []).map((item: any) => {
+          const rawLocation = item.location;
+          const location = typeof rawLocation === 'string' ? JSON.parse(rawLocation) : rawLocation;
+          const itemCoords =
+            location?.latitude != null
+              ? { latitude: location.latitude, longitude: location.longitude }
+              : null;
+          const distance =
+            userCoords && itemCoords ? calculateDistance(userCoords, itemCoords) : Infinity;
+          const distanceText = distance !== Infinity ? formatDistance(distance) : '';
+          return {
+            ...toCamelCase(item),
+            location: toCamelCase(location),
+            isLiked: true,
+            likeCount: item.likedBy?.length ?? 0,
+            pendingRequest: item.requests?.filter((r: any) => r.status === 'PENDING').length ?? 0,
+            trendingRank: 0,
+            distance,
+            distanceText,
+          };
+        }) as unknown as TrendingItemRes[];
       },
     });
   };
@@ -85,16 +125,30 @@ export const useItems = () => {
       queryFn: async () => {
         const { data, error } = await supabase
           .from('items')
-          .select('*, images:item_images(*), user:users(*), category:categories(*), likedBy:liked_items(*), requests:item_requests(*, requester:users(*))')
+          .select(
+            '*, images:item_images(*), user:users(*), category:categories(*), likedBy:liked_items(*), requests:item_requests(*), requester:users(*)'
+          )
           .eq('id', id)
           .single();
+
         if (error) throw error;
+
+        const rawLocation = data.location;
+        const location = typeof rawLocation === 'string' ? JSON.parse(rawLocation) : rawLocation;
+        const itemCoords =
+          location?.latitude != null
+            ? { latitude: location.latitude, longitude: location.longitude }
+            : null;
+        const distance =
+          userCoords && itemCoords ? calculateDistance(userCoords, itemCoords) : Infinity;
+        const distanceText = distance !== Infinity ? formatDistance(distance) : '';
 
         return {
           ...toCamelCase(data),
-          isLiked: user ? data.likedBy?.some((l: any) => l.user_id === user.id) ?? false : false,
-          distance: 0,
-          distanceText: '',
+          location: toCamelCase(location),
+          isLiked: user ? (data.likedBy?.some((l: any) => l.user_id === user.id) ?? false) : false,
+          distance,
+          distanceText,
         } as unknown as ItemResponse;
       },
       enabled: !!id,
@@ -103,7 +157,13 @@ export const useItems = () => {
 
   const useCreateItem = () => {
     return useMutation({
-      mutationFn: async ({ data, images }: { data: Record<string, any>; images: { uri: string; name?: string | null; type?: string | null }[] }) => {
+      mutationFn: async ({
+        data,
+        images,
+      }: {
+        data: Record<string, any>;
+        images: ImagePickerAsset[];
+      }) => {
         if (!user?.id) throw new Error('Not authenticated');
 
         const { data: item, error: itemError } = await supabase
@@ -116,27 +176,24 @@ export const useItems = () => {
         if (images.length > 0) {
           const imageRecords = [];
           for (const image of images) {
-            const ext = image.uri.split('.').pop() || 'jpg';
+            const ext = image.mimeType?.split('/').pop();
             const fileName = `${item.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-            const response = await fetch(image.uri);
-            const blob = await response.blob();
 
             const { error: uploadError } = await supabase.storage
               .from('items')
-              .upload(fileName, blob);
+              .upload(fileName, decode(image.base64!), {
+                contentType: image.mimeType,
+                upsert: false,
+              });
             if (uploadError) throw uploadError;
 
-            const { data: { publicUrl } } = supabase.storage
-              .from('items')
-              .getPublicUrl(fileName);
+            const { data: urlData } = await supabase.storage.from('items').getPublicUrl(fileName);
 
-            imageRecords.push({ image_url: publicUrl, item_id: item.id });
+            imageRecords.push({ image_url: urlData.publicUrl, item_id: item.id });
           }
 
           if (imageRecords.length > 0) {
-            const { error: imgError } = await supabase
-              .from('item_images')
-              .insert(imageRecords);
+            const { error: imgError } = await supabase.from('item_images').insert(imageRecords);
             if (imgError) throw imgError;
           }
         }
@@ -161,14 +218,11 @@ export const useItems = () => {
       }: {
         id: string;
         data: Record<string, any>;
-        images: { uri: string; name?: string | null; type?: string | null }[];
+        images: ImagePickerAsset[];
         existingImages?: string[];
         imagesToDelete?: string[];
       }) => {
-        const { error: itemError } = await supabase
-          .from('items')
-          .update(data)
-          .eq('id', id);
+        const { error: itemError } = await supabase.from('items').update(data).eq('id', id);
         if (itemError) throw itemError;
 
         // Delete removed images
@@ -188,27 +242,24 @@ export const useItems = () => {
         if (images.length > 0) {
           const imageRecords = [];
           for (const image of images) {
-            const ext = image.uri.split('.').pop() || 'jpg';
+            const ext = image.mimeType?.split('/').pop();
             const fileName = `${id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-            const response = await fetch(image.uri);
-            const blob = await response.blob();
 
             const { error: uploadError } = await supabase.storage
               .from('items')
-              .upload(fileName, blob);
+              .upload(fileName, decode(image.base64!), {
+                contentType: image.mimeType,
+                upsert: false,
+              });
             if (uploadError) throw uploadError;
 
-            const { data: { publicUrl } } = supabase.storage
-              .from('items')
-              .getPublicUrl(fileName);
+            const { data: urlData } = await supabase.storage.from('items').getPublicUrl(fileName);
 
-            imageRecords.push({ image_url: publicUrl, item_id: id });
+            imageRecords.push({ image_url: urlData.publicUrl, item_id: id });
           }
 
           if (imageRecords.length > 0) {
-            const { error: imgError } = await supabase
-              .from('item_images')
-              .insert(imageRecords);
+            const { error: imgError } = await supabase.from('item_images').insert(imageRecords);
             if (imgError) throw imgError;
           }
         }
@@ -233,10 +284,7 @@ export const useItems = () => {
           .maybeSingle();
 
         if (existing.data) {
-          const { error } = await supabase
-            .from('liked_items')
-            .delete()
-            .eq('id', existing.data.id);
+          const { error } = await supabase.from('liked_items').delete().eq('id', existing.data.id);
           if (error) throw error;
         } else {
           const { error } = await supabase
@@ -255,10 +303,7 @@ export const useItems = () => {
   const useDeleteItemImage = () => {
     return useMutation({
       mutationFn: async ({ itemId, imageId }: { itemId: string; imageId: string }) => {
-        const { error } = await supabase
-          .from('item_images')
-          .delete()
-          .eq('id', imageId);
+        const { error } = await supabase.from('item_images').delete().eq('id', imageId);
         if (error) throw error;
       },
       onSuccess: (_, variables) => {
@@ -272,11 +317,7 @@ export const useItems = () => {
     return useMutation({
       mutationFn: async (data: { itemId: string; message?: string; quantity?: number }) => {
         if (!user?.id) throw new Error('Not authenticated');
-        const item = await supabase
-          .from('items')
-          .select('user_id')
-          .eq('id', data.itemId)
-          .single();
+        const item = await supabase.from('items').select('user_id').eq('id', data.itemId).single();
         if (item.error) throw item.error;
 
         const { error } = await supabase.from('item_requests').insert({

@@ -1,3 +1,4 @@
+import * as FileSystem from 'expo-file-system/legacy';
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
 
@@ -7,11 +8,21 @@ export type ImageT = {
   type?: string;
 };
 
+export async function toBlob(image: ImageT): Promise<Blob> {
+  if (!image.uri) throw new Error('Image URI is required');
+
+  const base64 = await FileSystem.readAsStringAsync(image.uri, {
+    encoding: FileSystem.EncodingType.Base64,
+  });
+
+  const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+  return new Blob([bytes], { type: image.type || 'image/jpeg' });
+}
+
 export default function usePickImage() {
-  const [images, setImages] = useState<ImageT[]>([]);
+  const [images, setImages] = useState<ImagePicker.ImagePickerAsset[]>([]);
 
   const pickImage = async () => {
-    // Request permissions
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       alert('Sorry, we need camera roll permissions to make this work!');
@@ -19,21 +30,16 @@ export default function usePickImage() {
     }
 
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       aspect: [4, 3],
       quality: 0.8,
-      selectionLimit: 5 - images.length, // Dynamic limit based on current images
+      base64: true,
+      selectionLimit: 5 - images.length,
       allowsMultipleSelection: true,
     });
 
     if (!result.canceled) {
-      const newImages = result.assets.map((d) => ({
-        name: d.fileName ?? d.uri.split('/').pop(),
-        uri: d.uri,
-        type: d.mimeType,
-      }));
-
-      setImages((prev) => [...prev, ...newImages].slice(0, 5)); // Ensure max 5 images
+      setImages((prev) => [...prev, ...result.assets].slice(0, 5));
     }
   };
 

@@ -1,4 +1,4 @@
-import { Coords } from '@/app/(screen)/(location)/choose';
+import { Coords } from '@/components/leaflet/types';
 import { create } from 'zustand';
 
 export type CoordStore = {

@@ -10,7 +10,6 @@ import {
   Clock,
   ClockAlert,
   Filter,
-  LucideIcon,
   MapPin,
   Search,
   Tag,
@@ -82,7 +81,9 @@ export default function ItemsListScreen() {
               className="flex-row items-center rounded-full border border-gray-300 bg-white px-3 py-2">
               <Tag size={16} color="#6B7280" />
               <Text className="ml-2 text-sm text-gray-700">{category?.name ?? 'All'}</Text>
-              <ChevronDown size={14} color="#6B7280" className="ml-1" />
+              <View className="ml-1">
+                <ChevronDown size={14} color="#6B7280" />
+              </View>
             </Pressable>
 
             {/* Sort Filter */}
@@ -91,7 +92,9 @@ export default function ItemsListScreen() {
               className="flex-row items-center rounded-full border border-gray-300 bg-white px-3 py-2">
               <Filter size={16} color="#6B7280" />
               <Text className="ml-2 text-sm text-gray-700">{selectedSort ?? 'Sort by'}</Text>
-              <ChevronDown size={14} color="#6B7280" className="ml-1" />
+              <View className="ml-1">
+                <ChevronDown size={14} color="#6B7280" />
+              </View>
             </Pressable>
 
             {/* Location Filter */}

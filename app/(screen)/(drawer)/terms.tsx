@@ -79,13 +79,17 @@ export default function TermsScreen() {
                 and all applicable laws and regulations.
               </Text>
               <View className="mt-4 flex-row items-start">
-                <CheckCircle size={18} color="#3B82F6" className="mr-3 mt-1 flex-shrink-0" />
+                <View className="mr-3 mt-1 flex-shrink-0">
+                  <CheckCircle size={18} color="#3B82F6" />
+                </View>
                 <Text className="flex-1 text-gray-600">
                   Your use of the app constitutes acceptance of these terms
                 </Text>
               </View>
               <View className="mt-2 flex-row items-start">
-                <CheckCircle size={18} color="#3B82F6" className="mr-3 mt-1 flex-shrink-0" />
+                <View className="mr-3 mt-1 flex-shrink-0">
+                  <CheckCircle size={18} color="#3B82F6" />
+                </View>
                 <Text className="flex-1 text-gray-600">
                   You acknowledge reading and understanding these terms
                 </Text>
@@ -133,7 +137,9 @@ export default function TermsScreen() {
                   'Do not post false or misleading information',
                 ].map((item, index) => (
                   <View key={index} className="flex-row items-start">
-                    <AlertCircle size={18} color="#D97706" className="mr-3 mt-1 flex-shrink-0" />
+                    <View className="mr-3 mt-1 flex-shrink-0">
+                      <AlertCircle size={18} color="#D97706" />
+                    </View>
                     <Text className="flex-1 text-gray-600">{item}</Text>
                   </View>
                 ))}
@@ -151,7 +157,9 @@ export default function TermsScreen() {
               </Text>
               <View className="rounded-lg bg-red-50 p-5">
                 <View className="flex-row items-start">
-                  <Shield size={20} color="#DC2626" className="mr-3 mt-1" />
+                    <View className="mr-3 mt-1">
+                      <Shield size={20} color="#DC2626" />
+                    </View>
                   <View className="flex-1">
                     <Text className="mb-2 font-semibold text-red-800">Important Disclaimer</Text>
                     <Text className="text-sm text-red-700">
@@ -173,19 +181,25 @@ export default function TermsScreen() {
               </Text>
               <View className="gap-3">
                 <View className="flex-row items-start">
-                  <CheckCircle size={18} color="#8B5CF6" className="mr-3 mt-1 flex-shrink-0" />
+                  <View className="mr-3 mt-1 flex-shrink-0">
+                    <CheckCircle size={18} color="#8B5CF6" />
+                  </View>
                   <Text className="flex-1 text-gray-600">
                     We may update these terms periodically
                   </Text>
                 </View>
                 <View className="flex-row items-start">
-                  <CheckCircle size={18} color="#8B5CF6" className="mr-3 mt-1 flex-shrink-0" />
+                  <View className="mr-3 mt-1 flex-shrink-0">
+                    <CheckCircle size={18} color="#8B5CF6" />
+                  </View>
                   <Text className="flex-1 text-gray-600">
                     Continued use after changes means you accept them
                   </Text>
                 </View>
                 <View className="flex-row items-start">
-                  <CheckCircle size={18} color="#8B5CF6" className="mr-3 mt-1 flex-shrink-0" />
+                  <View className="mr-3 mt-1 flex-shrink-0">
+                    <CheckCircle size={18} color="#8B5CF6" />
+                  </View>
                   <Text className="flex-1 text-gray-600">
                     We recommend reviewing terms regularly
                   </Text>

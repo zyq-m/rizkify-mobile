@@ -1,8 +1,8 @@
+import { MyItemRes, ReqItemResponse } from '@/api/service';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/auth-store';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toCamelCase } from '@/utils/map';
-import { MyItemRes, ReqItemResponse } from '@/api/service';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export const useUser = () => {
   const queryClient = useQueryClient();
@@ -13,13 +13,13 @@ export const useUser = () => {
       queryKey: ['user', 'profile'],
       queryFn: async () => {
         if (!user?.id) throw new Error('Not authenticated');
-        const { data, error } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', user.id)
-          .single();
+        const { data, error } = await supabase.from('users').select('*').eq('id', user.id).single();
         if (error) throw error;
-        return toCamelCase(data);
+
+        const rawLocation = data.location;
+        const location = typeof rawLocation === 'string' ? JSON.parse(rawLocation) : rawLocation;
+
+        return { ...toCamelCase(data), location: toCamelCase(location) };
       },
       enabled: !!user?.id,
       staleTime: 5 * 60 * 1000,

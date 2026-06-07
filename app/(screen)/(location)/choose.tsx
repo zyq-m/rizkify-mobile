@@ -1,42 +1,33 @@
-import { LATITUDE_DELTA, LONGITUDE_DELTA } from '@/components/custom/custom-map';
+import LeafletMap, { LeafletMapHandle } from '@/components/leaflet/leaflet-map';
+import { Coords } from '@/components/leaflet/types';
 import { Button } from '@/components/nativewindui/Button';
 import { Text } from '@/components/nativewindui/Text';
 import useLocation from '@/hooks/use-location';
 import { useCoords } from '@/store/store';
 import { router } from 'expo-router';
 import { LocateFixed } from 'lucide-react-native';
-import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import MapView, { MapPressEvent, Marker, Region } from 'react-native-maps';
-
-export type Coords = { latitude: number; longitude: number };
+import React, { useRef, useState } from 'react';
+import { View } from 'react-native';
 
 export default function ChooseLocation() {
   const { location } = useLocation();
-  const mapRef = useRef<MapView>(null);
+  const mapRef = useRef<LeafletMapHandle>(null);
   const [markerCoords, setMarkerCoords] = useState<Coords>();
-  const [currentRegion, setCurrentRegion] = useState<Region>();
   const { setCoords } = useCoords();
 
-  const onMapPress = (event: MapPressEvent) => {
-    setMarkerCoords(event.nativeEvent.coordinate);
+  const onMapPress = (coords: Coords) => {
+    setMarkerCoords(coords);
   };
 
   const handleLocateMe = () => {
     if (location) {
       const newCoords = location.coords;
-      const region = {
+      setMarkerCoords(newCoords);
+      mapRef.current?.animateToRegion({
         latitude: newCoords.latitude,
         longitude: newCoords.longitude,
-        latitudeDelta: LATITUDE_DELTA,
-        longitudeDelta: LONGITUDE_DELTA,
-      };
-
-      setMarkerCoords(newCoords);
-      setCurrentRegion(region);
-
-      // Animate map to user location
-      mapRef.current?.animateToRegion(region, 500);
+        zoom: 14,
+      });
     }
   };
 
@@ -47,28 +38,34 @@ export default function ChooseLocation() {
     }
   };
 
-  useEffect(() => {
+  const getInitialRegion = () => {
     if (location) {
-      const newCoords = location.coords;
-      setCurrentRegion({
-        ...newCoords,
-        latitudeDelta: 0.0922,
-        longitudeDelta: 0.0421,
-      });
+      return {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        zoom: 14,
+      };
     }
-  }, [location]);
+    return {
+      latitude: 37.7749,
+      longitude: -122.4194,
+      zoom: 10,
+    };
+  };
 
   return (
     <View className="flex-1">
-      {currentRegion && (
-        <MapView
-          ref={mapRef}
-          style={{ ...StyleSheet.absoluteFillObject }}
-          initialRegion={currentRegion}
-          onPress={onMapPress}>
-          {markerCoords && <Marker coordinate={markerCoords} />}
-        </MapView>
-      )}
+      <LeafletMap
+        ref={mapRef}
+        style={{ flex: 1, position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+        initialRegion={getInitialRegion()}
+        onPress={onMapPress}
+        marker={
+          markerCoords
+            ? { latitude: markerCoords.latitude, longitude: markerCoords.longitude }
+            : null
+        }
+      />
       <View className="absolute bottom-20 w-full space-y-4 px-6">
         <Button variant="plain" onPress={handleLocateMe}>
           <LocateFixed color="#eab308" />

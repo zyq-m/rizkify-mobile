@@ -1,9 +1,10 @@
-// components/SetSearchLocationModal.tsx
+import LeafletMap, { LeafletMapHandle } from '@/components/leaflet/leaflet-map';
+import { Coords } from '@/components/leaflet/types';
 import useLocation from '@/hooks/use-location';
-import { Crosshair, MapPin, Target, X } from 'lucide-react-native';
+import { Crosshair, MapPin, X } from 'lucide-react-native';
 import React, { JSX, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, Text, View } from 'react-native';
-import MapView, { Circle, MapPressEvent, Marker, Region } from 'react-native-maps';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export interface Coordinates {
   latitude: number;
@@ -31,6 +32,15 @@ const rangeOptions: RangeOption[] = [
   { label: '20 km', value: 20 },
 ];
 
+const TARGET_MARKER_HTML = `<div style="display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;border:2px solid white;background:#22c55e;box-shadow:0 4px 6px -1px rgba(0,0,0,0.3)"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/></svg></div>`;
+
+function rangeToZoom(range: number): number {
+  if (range <= 3) return 13;
+  if (range === 5) return 12;
+  if (range <= 15) return 10;
+  return 9;
+}
+
 interface SetSearchLocationModalProps {
   visible: boolean;
   onClose: () => void;
@@ -50,7 +60,8 @@ export default function SetSearchLocationModal({
   btnLabel = 'Save Location',
   hideRange = undefined,
 }: SetSearchLocationModalProps): JSX.Element {
-  const mapRef = useRef<MapView>(null);
+  const mapRef = useRef<LeafletMapHandle>(null);
+  const [mapReady, setMapReady] = useState(false);
   const {
     location,
     loading: locationLoading,
@@ -62,30 +73,31 @@ export default function SetSearchLocationModal({
   const [searchLocation, setSearchLocation] = useState<SearchLocation | null>(initialLocation);
   const [selectedRange, setSelectedRange] = useState<number>(initialLocation?.range || 5);
   const [gettingAddress, setGettingAddress] = useState<boolean>(false);
-  const [mapLoading, setMapLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
 
-  // Animation functions
-  const animateToRegion = (coords: Coordinates, zoomLevel: number = 0.05): void => {
-    const region: Region = {
+  const animateToRegion = (coords: Coordinates, zoom: number = 13): void => {
+    mapRef.current?.animateToRegion({
       latitude: coords.latitude,
       longitude: coords.longitude,
-      latitudeDelta: zoomLevel,
-      longitudeDelta: zoomLevel,
-    };
-
-    mapRef.current?.animateToRegion(region, 1000);
+      zoom,
+    });
   };
-  // Initialize with current location or initial location when modal opens
+
+  const getInitialZoom = (): number => {
+    if (searchLocation) return rangeToZoom(searchLocation.range);
+    return 12;
+  };
+
   useEffect(() => {
     if (visible) {
       if (initialLocation) {
         setSearchLocation(initialLocation);
         setSelectedRange(initialLocation.range);
-        // Animate to initial location when modal opens
-        setTimeout(() => {
-          animateToRegion(initialLocation, 0.2);
-        }, 500);
+        if (mapReady) {
+          setTimeout(() => {
+            animateToRegion(initialLocation, rangeToZoom(initialLocation.range));
+          }, 500);
+        }
       } else if (location) {
         const newLocation = {
           latitude: location.coords.latitude,
@@ -94,16 +106,44 @@ export default function SetSearchLocationModal({
           range: 5,
         };
         setSearchLocation(newLocation);
-        // Animate to current location when modal opens
-        setTimeout(() => {
-          animateToRegion(newLocation, 0.2);
-        }, 500);
+        if (mapReady) {
+          setTimeout(() => {
+            animateToRegion(newLocation, 12);
+          }, 500);
+        }
       }
     }
-  }, [visible, location, initialLocation]);
+  }, [visible, location, initialLocation, mapReady]);
 
-  const handleMapPress = async (event: MapPressEvent): Promise<void> => {
-    const { latitude, longitude } = event.nativeEvent.coordinate;
+  useEffect(() => {
+    if (mapReady && location) {
+      mapRef.current?.setUserLocation({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+    }
+  }, [mapReady, location]);
+
+  useEffect(() => {
+    if (mapReady && searchLocation) {
+      mapRef.current?.setMarker({
+        latitude: searchLocation.latitude,
+        longitude: searchLocation.longitude,
+        html: TARGET_MARKER_HTML,
+      });
+      mapRef.current?.setCircle({
+        latitude: searchLocation.latitude,
+        longitude: searchLocation.longitude,
+        radius: searchLocation.range * 1000,
+        fillColor: 'rgba(34, 197, 94, 0.2)',
+        strokeColor: 'rgba(34, 197, 94, 0.7)',
+        strokeWidth: 2,
+      });
+    }
+  }, [mapReady, searchLocation]);
+
+  const handleMapPress = async (coords: Coords): Promise<void> => {
+    const { latitude, longitude } = coords;
     setGettingAddress(true);
 
     try {
@@ -115,8 +155,7 @@ export default function SetSearchLocationModal({
         range: selectedRange,
       };
       setSearchLocation(newLocation);
-      // Smooth animation to the tapped location
-      animateToRegion(newLocation, 0.07);
+      animateToRegion(newLocation, 13);
     } catch (error) {
       console.error('Error getting address:', error);
       const newLocation = {
@@ -126,7 +165,7 @@ export default function SetSearchLocationModal({
         range: selectedRange,
       };
       setSearchLocation(newLocation);
-      animateToRegion(newLocation, 0.2);
+      animateToRegion(newLocation, 12);
     } finally {
       setGettingAddress(false);
     }
@@ -141,8 +180,7 @@ export default function SetSearchLocationModal({
         range: selectedRange,
       };
       setSearchLocation(newLocation);
-      // Smooth animation to current location
-      animateToRegion(newLocation, 0.07);
+      animateToRegion(newLocation, 13);
     } else {
       await refreshLocation();
     }
@@ -155,16 +193,7 @@ export default function SetSearchLocationModal({
         ...searchLocation,
         range,
       });
-      // Optional: Slight zoom adjustment when range changes
-      if (range <= 3) {
-        animateToRegion(searchLocation, 0.05);
-      } else if (range === 5) {
-        animateToRegion(searchLocation, 0.1);
-      } else if (range <= 15) {
-        animateToRegion(searchLocation, 0.3);
-      } else {
-        animateToRegion(searchLocation, 0.6);
-      }
+      animateToRegion(searchLocation, rangeToZoom(range));
     }
   };
 
@@ -180,7 +209,6 @@ export default function SetSearchLocationModal({
         console.log('Saving to database for user:', userId);
       }
       onLocationSet(searchLocation);
-
       onClose();
     } catch (error) {
       console.error('Error saving location:', error);
@@ -196,27 +224,24 @@ export default function SetSearchLocationModal({
     onClose();
   };
 
-  const getInitialRegion = (): Region => {
+  const getInitialRegion = () => {
     if (searchLocation) {
       return {
         latitude: searchLocation.latitude,
         longitude: searchLocation.longitude,
-        latitudeDelta: 0.05,
-        longitudeDelta: 0.05,
+        zoom: rangeToZoom(searchLocation.range),
       };
     } else if (location) {
       return {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
-        latitudeDelta: 0.05,
-        longitudeDelta: 0.05,
+        zoom: 12,
       };
     } else {
       return {
         latitude: 37.7749,
         longitude: -122.4194,
-        latitudeDelta: 0.1,
-        longitudeDelta: 0.1,
+        zoom: 10,
       };
     }
   };
@@ -229,62 +254,34 @@ export default function SetSearchLocationModal({
       onRequestClose={handleClose}>
       <View className="flex-1 bg-white">
         {/* Header */}
-        <View className="border-b border-gray-200 px-6 py-4">
-          <View className="mb-2 flex-row items-center justify-between">
-            <Text className="text-lg font-semibold text-gray-900">Set Search Area</Text>
-            <Pressable onPress={handleClose} className="p-1">
-              <X size={24} color="#374151" />
-            </Pressable>
+        <SafeAreaView edges={['top']}>
+          <View className="border-b border-gray-200 px-6 py-4">
+            <View className="mb-2 flex-row items-center justify-between">
+              <Text className="text-lg font-semibold text-gray-900">Set Search Area</Text>
+              <Pressable onPress={handleClose} className="p-1">
+                <X size={24} color="#374151" />
+              </Pressable>
+            </View>
+            <Text className="text-sm text-gray-600">Set where you want to look for items</Text>
           </View>
-          <Text className="text-sm text-gray-600">Set where you want to look for items</Text>
-        </View>
+        </SafeAreaView>
 
         {/* Map Section */}
         <View className="relative flex-1">
-          {mapLoading && (
+          {!mapReady && (
             <View className="absolute bottom-0 left-0 right-0 top-0 z-10 items-center justify-center bg-gray-100">
               <ActivityIndicator size="large" color="#EAB308" />
               <Text className="mt-2 text-gray-600">Loading map...</Text>
             </View>
           )}
 
-          <MapView
-            ref={mapRef} // Add the ref here
+          <LeafletMap
+            ref={mapRef}
             style={{ flex: 1 }}
             initialRegion={getInitialRegion()}
             onPress={handleMapPress}
-            onMapLoaded={() => setMapLoading(false)}
-            showsUserLocation={true}
-            showsMyLocationButton={false}>
-            {searchLocation && (
-              <>
-                {/* Search Range Circle */}
-                <Circle
-                  center={{
-                    latitude: searchLocation.latitude,
-                    longitude: searchLocation.longitude,
-                  }}
-                  radius={searchLocation.range * 1000}
-                  fillColor="rgba(34, 197, 94, 0.2)"
-                  strokeColor="rgba(34, 197, 94, 0.7)"
-                  strokeWidth={2}
-                />
-
-                {/* Search Location Marker */}
-                <Marker
-                  coordinate={{
-                    latitude: searchLocation.latitude,
-                    longitude: searchLocation.longitude,
-                  }}>
-                  <View className="items-center">
-                    <View className="h-10 w-10 items-center justify-center rounded-full border-2 border-white bg-green-500 shadow-lg">
-                      <Target size={18} color="white" />
-                    </View>
-                  </View>
-                </Marker>
-              </>
-            )}
-          </MapView>
+            onReady={() => setMapReady(true)}
+          />
 
           {/* Current Location Button */}
           <Pressable

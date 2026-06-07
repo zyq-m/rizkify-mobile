@@ -1,7 +1,6 @@
-import { Coords } from '@/app/(screen)/(location)/choose';
+import LeafletMap, { LeafletMapHandle } from '@/components/leaflet/leaflet-map';
 import React, { useEffect, useRef } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
 
 const screen = Dimensions.get('window');
 
@@ -9,46 +8,38 @@ const ASPECT_RATIO = screen.width / screen.height;
 export const LATITUDE_DELTA = 0.0922;
 export const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
 
+interface Coords {
+  latitude: number;
+  longitude: number;
+}
+
 export default function CustomMap(props: Coords) {
-  const mapRef = useRef<MapView>(null);
+  const mapRef = useRef<LeafletMapHandle>(null);
 
   useEffect(() => {
     if (props.latitude && props.longitude) {
-      // Small delay to ensure map is ready
       const timer = setTimeout(() => {
         mapRef.current?.animateToRegion(
-          {
-            ...props,
-            latitudeDelta: LATITUDE_DELTA,
-            longitudeDelta: LONGITUDE_DELTA,
-          },
-          1000
-        ); // 1000ms animation duration
+          { latitude: props.latitude, longitude: props.longitude, zoom: 14 }
+        );
       }, 100);
-
       return () => clearTimeout(timer);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.latitude, props.longitude]); // Re-run when coordinates change
+  }, [props.latitude, props.longitude]);
 
   return (
     <View style={styles.container}>
-      <MapView
+      <LeafletMap
         ref={mapRef}
         style={styles.map}
         initialRegion={{
-          ...props,
-          latitudeDelta: LATITUDE_DELTA,
-          longitudeDelta: LONGITUDE_DELTA,
+          latitude: props.latitude,
+          longitude: props.longitude,
+          zoom: 14,
         }}
-        scrollEnabled={false} // Disables map dragging
-        zoomEnabled={false} // Disables zooming
-        pitchEnabled={false} // Disables 3D tilt
-        rotateEnabled={false} // Disables rotation
-        zoomTapEnabled={false} // Disables double-tap zoom
-      >
-        <Marker coordinate={props} />
-      </MapView>
+        interactive={false}
+        marker={props.latitude && props.longitude ? { latitude: props.latitude, longitude: props.longitude } : null}
+      />
     </View>
   );
 }
