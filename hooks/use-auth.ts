@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 
 export const useAuth = () => {
   const queryClient = useQueryClient();
-  const { setAuth, setUser, reset } = useAuthStore();
+  const { setAuth, reset } = useAuthStore();
 
   const registerMutation = useMutation({
     mutationFn: async (data: { name: string; email: string; phone: string; password: string }) => {
