@@ -219,9 +219,11 @@ export default function Profile() {
         </View>
       </ScrollView>
       <SetSearchLocationModal
+        initialLocation={profile?.location}
         visible={showLocationModal}
         onClose={() => setShow(false)}
         onLocationSet={handleChangeLocation}
+        hideRange
       />
     </View>
   );
