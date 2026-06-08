@@ -3,17 +3,15 @@ import SetSearchLocationModal, { SearchLocation } from '@/components/custom/set-
 import TrendingItemCard from '@/components/custom/trending-item';
 import { useItems } from '@/hooks/use-items';
 import { useUser } from '@/hooks/use-user';
-import { MapPin, TrendingUp } from 'lucide-react-native';
+import { Bell, MapPin, TrendingUp } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 export default function HomeScreen() {
   const [showLocationModal, setShowLocationModal] = useState(false);
-
   const { useUpdateProfile, useProfile } = useUser();
   const { mutate: setProfile, isPending } = useUpdateProfile();
   const { data: profile } = useProfile();
-
   const { data: trending } = useItems().useTrending();
 
   const handleSetLocation = (location: SearchLocation) => {
@@ -29,10 +27,10 @@ export default function HomeScreen() {
             <Text className="text-2xl font-bold text-gray-900">Hello {profile?.name}👋</Text>
             <Text className="text-gray-600">Find fresh food near you</Text>
           </View>
-          {/* <Pressable className="relative">
+          <Pressable className="relative">
             <Bell size={24} color="#374151" />
             <View className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-red-500" />
-          </Pressable> */}
+          </Pressable>
         </View>
 
         {/* Location Bar */}
@@ -74,6 +72,7 @@ export default function HomeScreen() {
         onClose={() => setShowLocationModal(false)}
         onLocationSet={handleSetLocation}
         initialLocation={profile?.location}
+        hideRange={true}
       />
     </View>
   );

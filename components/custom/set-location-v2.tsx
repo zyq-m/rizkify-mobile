@@ -83,11 +83,6 @@ export default function SetSearchLocationModal({
     });
   };
 
-  const getInitialZoom = (): number => {
-    if (searchLocation) return rangeToZoom(searchLocation.range);
-    return 12;
-  };
-
   useEffect(() => {
     if (visible) {
       if (initialLocation) {
@@ -221,6 +216,7 @@ export default function SetSearchLocationModal({
   const handleClose = (): void => {
     setSearchLocation(initialLocation);
     setSelectedRange(initialLocation?.range || 5);
+    setMapReady(false);
     onClose();
   };
 
@@ -229,7 +225,7 @@ export default function SetSearchLocationModal({
       return {
         latitude: searchLocation.latitude,
         longitude: searchLocation.longitude,
-        zoom: rangeToZoom(searchLocation.range),
+        zoom: rangeToZoom(Number(searchLocation.range)),
       };
     } else if (location) {
       return {
@@ -289,11 +285,6 @@ export default function SetSearchLocationModal({
             className="absolute right-4 top-4 h-12 w-12 items-center justify-center rounded-full bg-white shadow-lg active:bg-gray-50">
             <Crosshair size={20} color="#374151" />
           </Pressable>
-
-          {/* Map Instructions */}
-          <View className="absolute left-4 top-4 rounded-lg bg-black/70 px-3 py-2">
-            <Text className="text-sm font-medium text-white">Tap to set location</Text>
-          </View>
         </View>
 
         {/* Controls Panel */}

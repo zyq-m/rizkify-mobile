@@ -16,12 +16,6 @@ export default function LocationLayout() {
           title: 'Choose your pickup location',
         }}
       />
-      <Stack.Screen
-        name="set"
-        options={{
-          title: 'Set Location',
-        }}
-      />
     </Stack>
   );
 }
