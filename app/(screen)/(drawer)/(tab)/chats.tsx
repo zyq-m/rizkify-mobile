@@ -26,8 +26,9 @@ export default function ChatsListScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
 
-  const { useConversations } = useChat();
+  const { useConversations, useMarkMessagesAsRead } = useChat();
   const { data, refetch } = useConversations();
+  const { mutate: markAsRead } = useMarkMessagesAsRead();
 
   // Handle search
   const handleSearch = (query: string) => {
@@ -54,6 +55,7 @@ export default function ChatsListScreen() {
   }, [refetch]);
 
   const navigateToChat = (chat: Conversation) => {
+    markAsRead(chat.partner.id);
     router.push({
       pathname: '/(screen)/chat/[id]',
       params: { id: chat.request.id },
@@ -71,12 +73,13 @@ export default function ChatsListScreen() {
           <User size={20} color="#6B7280" />
         )}
       </View>
-      <View className="flex-1 justify-center gap-2">
-        <View className="flex-row items-center justify-between">
-          <Text className="text-base font-semibold text-gray-900">{item.partner.name}</Text>
-          <Text className="text-xs text-gray-500">{dayjs().to(item.lastMessage.createdAt)}</Text>
+      <View className="flex-1 justify-center gap-1">
+        <View className="flex-row items-center">
+          <Text className="flex-1 text-base font-medium text-gray-900" numberOfLines={1}>
+            {item.partner.name} • {item.item.name}
+          </Text>
+          <Text className="ml-2 text-xs text-gray-500">{dayjs().to(item.lastMessage.createdAt)}</Text>
         </View>
-        <Text>{item.item.name}</Text>
         <View className="flex-row items-center justify-between">
           <Text
             className={`mr-2 flex-1 text-sm ${
@@ -86,7 +89,7 @@ export default function ChatsListScreen() {
             {item.lastMessage.content}
           </Text>
           {item.unreadCount > 0 && (
-            <View className="h-5 min-w-5 items-center justify-center rounded-full bg-blue-500 px-1.5">
+            <View className="h-5 min-w-5 items-center justify-center rounded-full bg-blue-500 px-1">
               <Text className="text-xs font-semibold text-white">{item.unreadCount}</Text>
             </View>
           )}

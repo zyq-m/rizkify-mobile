@@ -22,7 +22,7 @@ export const useChat = () => {
         const { data: requests, error } = await supabase
           .from('item_requests')
           .select(
-            '*, item:items(*, images:item_images(*)), requester:users(*), provider:users(*), chats:chat_messages(*)'
+            '*, item:items(*, images:item_images(*)), requester:users!item_requests_requester_id_fkey(*), provider:users!item_requests_provider_id_fkey(*), chats:chat_messages(*)'
           )
           .or(`requester_id.eq.${user.id},provider_id.eq.${user.id}`)
           .order('updated_at', { ascending: false });
@@ -85,7 +85,7 @@ export const useChat = () => {
         const { data: request, error } = await supabase
           .from('item_requests')
           .select(
-            '*, item:items(*), requester:users(*), provider:users(*), chats:chat_messages(*, sender:users(*), receiver:users(*))'
+            '*, item:items(*), requester:users!item_requests_requester_id_fkey(*), provider:users!item_requests_provider_id_fkey(*), chats:chat_messages(*, sender:users!chat_messages_sender_id_fkey(*), receiver:users!chat_messages_receiver_id_fkey(*))'
           )
           .eq('id', reqItemId)
           .single();
@@ -108,7 +108,10 @@ export const useChat = () => {
           receiver_id: data.receiverId,
           item_request_id: data.itemRequestId,
         });
-        if (error) throw error;
+        if (error) {
+          console.log(error);
+          throw error;
+        }
       },
       onSuccess: (_, variables) => {
         queryClient.invalidateQueries({
@@ -160,7 +163,10 @@ export const useChat = () => {
           .eq('sender_id', senderId)
           .eq('receiver_id', user.id)
           .eq('is_read', false);
-        if (error) throw error;
+        if (error) {
+          console.log(error);
+          throw error;
+        }
       },
       onSuccess: (_, senderId) => {
         queryClient.invalidateQueries({ queryKey: ['chat', 'messages', senderId] });

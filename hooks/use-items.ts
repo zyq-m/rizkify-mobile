@@ -1,9 +1,9 @@
 import { ItemRequestStatus, ItemResponse, ReqItemResponse, TrendingItemRes } from '@/api/service';
+import { useUser } from '@/hooks/use-user';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/auth-store';
-import { toCamelCase } from '@/utils/map';
 import { calculateDistance, formatDistance } from '@/utils/distance';
-import { useUser } from '@/hooks/use-user';
+import { toCamelCase } from '@/utils/map';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { decode } from 'base64-arraybuffer';
 import { ImagePickerAsset } from 'expo-image-picker';
@@ -16,9 +16,10 @@ export const useItems = () => {
   const { useProfile } = useUser();
   const { data: profile } = useProfile();
 
-  const userCoords = profile?.location?.latitude != null
-    ? { latitude: profile.location.latitude, longitude: profile.location.longitude }
-    : null;
+  const userCoords =
+    profile?.location?.latitude != null
+      ? { latitude: profile.location.latitude, longitude: profile.location.longitude }
+      : null;
 
   const useItems = (filters?: {
     categoryId?: string;
@@ -126,7 +127,7 @@ export const useItems = () => {
         const { data, error } = await supabase
           .from('items')
           .select(
-            '*, images:item_images(*), user:users(*), category:categories(*), likedBy:liked_items(*), requests:item_requests(*), requester:users(*)'
+            '*, images:item_images(*), user:users(*), category:categories(*), likedBy:liked_items(*), requests:item_requests(*)'
           )
           .eq('id', id)
           .single();
@@ -320,14 +321,19 @@ export const useItems = () => {
         const item = await supabase.from('items').select('user_id').eq('id', data.itemId).single();
         if (item.error) throw item.error;
 
-        const { error } = await supabase.from('item_requests').insert({
-          item_id: data.itemId,
-          requester_id: user.id,
-          provider_id: item.data.user_id,
-          message: data.message || null,
-          quantity: data.quantity || 1,
-        });
+        const { data: request, error } = await supabase
+          .from('item_requests')
+          .insert({
+            item_id: data.itemId,
+            requester_id: user.id,
+            provider_id: item.data.user_id,
+            message: data.message || null,
+            quantity: data.quantity || 1,
+          })
+          .select()
+          .single();
         if (error) throw error;
+        return request;
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['items', 'requests'] });
@@ -344,9 +350,14 @@ export const useItems = () => {
         if (!user?.id) throw new Error('Not authenticated');
         const { data, error } = await supabase
           .from('item_requests')
-          .select('*, item:items(*, images:item_images(*)), requester:users(*)')
+          .select(
+            '*, item:items(*, images:item_images(*)), requester:users!item_requests_requester_id_fkey(*), provider:users!item_requests_provider_id_fkey(*)'
+          )
           .eq('requester_id', user.id);
-        if (error) throw error;
+        if (error) {
+          console.log(error);
+          throw error;
+        }
         return toCamelCase<ReqItemResponse[]>(data || []);
       },
       enabled: !!user?.id,

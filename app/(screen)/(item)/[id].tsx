@@ -1,4 +1,5 @@
 import CustomMap from '@/components/custom/custom-map';
+import { useChat } from '@/hooks/use-chat';
 import { useItems } from '@/hooks/use-items';
 import { useAuthStore } from '@/store/auth-store';
 import dayjs from 'dayjs';
@@ -24,6 +25,8 @@ export default function ItemDetails() {
   const { useItem, useCreateRequest } = useItems();
   const { data: item, isPending, error } = useItem(id);
   const requestItem = useCreateRequest();
+  const { useSendMessage } = useChat();
+  const sendMessage = useSendMessage();
 
   const { user } = useAuthStore();
 
@@ -32,7 +35,7 @@ export default function ItemDetails() {
   const imageScrollRef = useRef<ScrollView>(null);
   const [isLiked, setIsLiked] = useState(item?.isLiked);
   const [selectedQuantity, setSelectedQuantity] = useState(1);
-  const [message, setMessage] = useState<string | undefined>(undefined);
+  const [message, setMessage] = useState<string | undefined>('Hi, is this available?');
   const [disabledReqBtn, setDisable] = useState(false);
 
   const [showQuantityModal, setShowQuantityModal] = useState(false);
@@ -55,7 +58,14 @@ export default function ItemDetails() {
           message: message,
         },
         {
-          onSuccess: () => {
+          onSuccess: (request) => {
+            if (message && request?.id) {
+              sendMessage.mutate({
+                receiverId: item.userId,
+                content: message,
+                itemRequestId: request.id,
+              });
+            }
             Alert.alert('Item requested successfully');
             setShowQuantityModal(false);
             setMessage(undefined);
@@ -131,8 +141,7 @@ export default function ItemDetails() {
                 showsHorizontalScrollIndicator={false}
                 onMomentumScrollEnd={(e) => {
                   const page = Math.round(
-                    e.nativeEvent.contentOffset.x /
-                      e.nativeEvent.layoutMeasurement.width,
+                    e.nativeEvent.contentOffset.x / e.nativeEvent.layoutMeasurement.width
                   );
                   setSelectedImageIndex(page);
                 }}>
@@ -147,9 +156,7 @@ export default function ItemDetails() {
                         source={{ uri: img.imageUrl }}
                         className="h-full w-full"
                         resizeMode="cover"
-                        onError={() =>
-                          setImageErrorStates((prev) => ({ ...prev, [idx]: true }))
-                        }
+                        onError={() => setImageErrorStates((prev) => ({ ...prev, [idx]: true }))}
                       />
                     )}
                   </View>

@@ -15,7 +15,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Image,
-  KeyboardAvoidingView,
+  Keyboard,
   Platform,
   Pressable,
   ScrollView,
@@ -48,9 +48,16 @@ export default function ChatScreen() {
   const [currentUserId, setCurrentUserId] = useState<string>('');
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
-  const { useMessages, useSendMessage, sendRealTimeMessage, useMessageListener, joinChatRoom } =
-    useChat();
+  const {
+    useMessages,
+    useSendMessage,
+    sendRealTimeMessage,
+    useMessageListener,
+    joinChatRoom,
+    useMarkMessagesAsRead,
+  } = useChat();
   const { user } = useAuthStore();
 
   // Get initial messages from API
@@ -58,22 +65,30 @@ export default function ChatScreen() {
 
   // Send message mutation
   const sendMessageMutation = useSendMessage();
+  const { mutate: markAsRead } = useMarkMessagesAsRead();
 
   // Handle real-time messages
   const handleNewMessage = useCallback(
     (newMessage: ChatMessage) => {
-      // Only process messages for this chat room
+      // Don't add our own messages — already handled via optimistic update
+      if (newMessage.senderId === currentUserId) return;
+
       if (newMessage.itemRequestId === requestId) {
         setMessages((prev) => {
-          // Avoid duplicates
           const exists = prev.some((msg) => msg.id === newMessage.id);
           if (exists) return prev;
-
           return [...prev, newMessage];
         });
+
+        markAsRead(newMessage.senderId);
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.senderId === newMessage.senderId && !msg.isRead ? { ...msg, isRead: true } : msg
+          )
+        );
       }
     },
-    [requestId]
+    [requestId, currentUserId, markAsRead]
   );
 
   // Use the real-time message listener
@@ -105,6 +120,25 @@ export default function ChatScreen() {
       setCurrentUserId(user.id);
     }
   }, [user]);
+
+  // Track keyboard height
+  useEffect(() => {
+    const show = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      (e) => {
+        setKeyboardHeight(e.endCoordinates.height);
+        setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
+      }
+    );
+    const hide = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => setKeyboardHeight(0)
+    );
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
 
   const handleSendMessage = async () => {
     if (!message.trim() || !currentUserId || !conversationData) return;
@@ -256,10 +290,7 @@ export default function ChatScreen() {
       </View>
 
       {/* Chat Messages */}
-      <KeyboardAvoidingView
-        className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
+      <View className="flex-1">
         <ScrollView
           ref={scrollViewRef}
           className="flex-1"
@@ -267,27 +298,30 @@ export default function ChatScreen() {
           showsVerticalScrollIndicator={false}>
           {messages.map((msg, index) => {
             const isUser = isCurrentUser(msg.senderId);
-            const showAvatar = index === 0 || messages[index - 1]?.senderId !== msg.senderId;
+            const showAvatar =
+              index === messages.length - 1 || messages[index + 1]?.senderId !== msg.senderId;
 
             return (
               <View key={msg.id} className={`mb-3 ${isUser ? 'items-end' : 'items-start'}`}>
                 <View className={`max-w-[80%] flex-row ${isUser ? 'flex-row-reverse' : ''}`}>
                   {/* Avatar */}
-                  {!isUser && showAvatar && (
-                    <View className="mr-2 h-8 w-8 items-center justify-center rounded-full bg-gray-300">
-                      {otherUser.imageUrl ? (
-                        <Image
-                          source={{ uri: otherUser.imageUrl }}
-                          className="h-8 w-8 rounded-full"
-                        />
-                      ) : (
-                        <User size={16} color="#6B7280" />
-                      )}
+                  {!isUser && (
+                    <View
+                      className={`mr-2 mt-3 h-8 w-8 items-center justify-center rounded-full bg-gray-300 ${showAvatar ? '' : 'opacity-0'}`}>
+                      {showAvatar &&
+                        (otherUser.imageUrl ? (
+                          <Image
+                            source={{ uri: otherUser.imageUrl }}
+                            className="h-8 w-8 rounded-full"
+                          />
+                        ) : (
+                          <User size={16} color="#6B7280" />
+                        ))}
                     </View>
                   )}
 
                   {/* Message Bubble */}
-                  <View className={`flex-1 ${isUser ? 'mr-2' : ''}`}>
+                  <View className={isUser ? 'mr-2' : ''}>
                     <View
                       className={`rounded-2xl px-4 py-3 ${
                         isUser ? 'rounded-br-md bg-blue-500' : 'rounded-bl-md bg-gray-100'
@@ -313,7 +347,7 @@ export default function ChatScreen() {
                   </View>
 
                   {/* Spacer for user messages */}
-                  {isUser && showAvatar && <View className="mr-2 h-8 w-8" />}
+                  {isUser && <View className="mr-2 h-8 w-8" />}
                 </View>
               </View>
             );
@@ -321,7 +355,9 @@ export default function ChatScreen() {
         </ScrollView>
 
         {/* Message Input */}
-        <View className="border-t border-gray-200 bg-white px-4 py-3">
+        <View
+          className="border-t border-gray-200 bg-white px-4 py-3"
+          style={{ marginBottom: keyboardHeight }}>
           <View className="flex-row items-center">
             <Pressable className="mr-1 p-2">
               <ImageIcon size={20} color="#6B7280" />
@@ -351,7 +387,7 @@ export default function ChatScreen() {
             </Pressable>
           </View>
         </View>
-      </KeyboardAvoidingView>
+      </View>
     </View>
   );
 }

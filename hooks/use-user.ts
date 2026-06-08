@@ -111,7 +111,7 @@ export const useUser = () => {
         if (!user?.id) throw new Error('Not authenticated');
         const { data, error } = await supabase
           .from('item_requests')
-          .select('*, item:items(*, images:item_images(*)), provider:users(*)')
+          .select('*, item:items(*, images:item_images(*)), provider:users!item_requests_provider_id_fkey(*)')
           .eq('requester_id', user.id);
         if (error) throw error;
         return toCamelCase<ReqItemResponse[]>(data || []);
@@ -127,7 +127,7 @@ export const useUser = () => {
         if (!user?.id) throw new Error('Not authenticated');
         const { data, error } = await supabase
           .from('item_requests')
-          .select('*, item:items(*, images:item_images(*)), requester:users(*)')
+          .select('*, item:items(*, images:item_images(*)), requester:users!item_requests_requester_id_fkey(*)')
           .eq('provider_id', user.id);
         if (error) throw error;
         return toCamelCase<ReqItemResponse[]>(data || []);
