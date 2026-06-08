@@ -72,11 +72,17 @@ export const useUser = () => {
           .order('created_at', { ascending: false });
         if (error) throw error;
 
-        return (data || []).map((item: any) => ({
-          ...toCamelCase(item),
-          likeCount: 0,
-          pendingRequestCount: 0,
-        })) as MyItemRes[];
+        return (data || []).map((item: any) => {
+          const rawLocation = item.location;
+          const location = typeof rawLocation === 'string' ? JSON.parse(rawLocation) : rawLocation;
+
+          return {
+            ...toCamelCase(item),
+            location: toCamelCase(location),
+            likeCount: 0,
+            pendingRequestCount: 0,
+          };
+        }) as MyItemRes[];
       },
       enabled: !!user?.id,
     });

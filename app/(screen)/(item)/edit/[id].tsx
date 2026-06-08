@@ -67,7 +67,7 @@ export default function EditItemScreen() {
         quantity: item.quantity.toString(),
         categoryId: item.categoryId,
         conditionId: item.conditionId,
-        expiry: '', // Format date for input
+        expiry: item.expiry, // Format date for input
         location: item.location,
       });
 
@@ -450,6 +450,7 @@ export default function EditItemScreen() {
       {/* Location Modal */}
       <SetSearchLocationModal
         visible={modal}
+        initialLocation={coords}
         onLocationSet={(e) => setCoords(e)}
         onClose={() => setModal(false)}
         hideRange
