@@ -42,7 +42,7 @@ export default function ItemCard({ item, onPress, onLike }: ItemCardProps) {
   return (
     <Pressable
       onPress={handleCardPress}
-      className="mb-3 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all active:scale-95">
+      className="mb-3 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
       {/* Image Section */}
       <View className="relative">
         {item.images.length && !imageError ? (
