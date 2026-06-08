@@ -4,7 +4,6 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
-  Calendar,
   CheckCircle,
   ChevronRight,
   Clock,
@@ -35,8 +34,6 @@ dayjs.extend(relativeTime);
 export default function ItemRequest() {
   const { id: itemId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const [selectedRequest, setSelectedRequest] = useState<RequestItem | null>(null);
-  const [showRequestModal, setShowRequestModal] = useState(false);
   const [filter, setFilter] = useState<'all' | ItemRequestStatus>('all');
   const [showFilterModal, setShowFilterModal] = useState(false);
 
@@ -46,16 +43,6 @@ export default function ItemRequest() {
 
   const handleBack = () => {
     router.back();
-  };
-
-  const openRequestDetails = (request: RequestItem) => {
-    setSelectedRequest(request);
-    setShowRequestModal(true);
-  };
-
-  const closeRequestDetails = () => {
-    setShowRequestModal(false);
-    setSelectedRequest(null);
   };
 
   const handleStatusChange = async (requestId: string, newStatus: ItemRequestStatus) => {
@@ -86,20 +73,11 @@ export default function ItemRequest() {
     );
   };
 
-  const handleContact = (userId: string) => {
-    // Find requester from item data
-    const requester = item?.requests.find((req) => req.id === userId);
-    if (!requester) {
-      Alert.alert('No Contact Info', 'Could not find contact information for this user.');
-      return;
-    }
-
-    // Note: You might need to adjust this based on your user structure
-    Alert.alert('Contact Requester', 'This would open contact options in a real app', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Message', style: 'default' },
-      { text: 'Call', style: 'default' },
-    ]);
+  const handleContact = (requestId: string) => {
+    router.push({
+      pathname: '/(screen)/chat/[id]',
+      params: { id: requestId },
+    });
   };
 
   const getStatusColor = (status: ItemRequestStatus) => {
@@ -195,7 +173,7 @@ export default function ItemRequest() {
           <View className="flex-row items-center">
             <View>
               <Text className="text-2xl font-bold text-gray-900">{item.name}</Text>
-              <Text className="text-gray-500">{item.category.name}</Text>
+              <Text className="text-gray-500">{item.category?.name ?? 'Unknown'}</Text>
             </View>
           </View>
 
@@ -267,15 +245,27 @@ export default function ItemRequest() {
       </View>
 
       {filteredRequests.length === 0 ? (
-        <View className="flex-1 items-center justify-center px-8">
-          <Package size={80} color="#D1D5DB" />
-          <Text className="mt-4 text-xl font-semibold text-gray-900">No requests found</Text>
-          <Text className="mt-2 text-center text-gray-600">
-            {filter === 'all'
-              ? 'No one has requested this item yet.'
-              : `No ${filter.toLowerCase()} requests found.`}
-          </Text>
-        </View>
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ flexGrow: 1 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefetching}
+              onRefresh={refetch}
+              colors={['#000']}
+              tintColor="#000"
+            />
+          }>
+          <View className="flex-1 items-center justify-center px-8">
+            <Package size={80} color="#D1D5DB" />
+            <Text className="mt-4 text-xl font-semibold text-gray-900">No requests found</Text>
+            <Text className="mt-2 text-center text-gray-600">
+              {filter === 'all'
+                ? 'No one has requested this item yet.'
+                : `No ${filter.toLowerCase()} requests found.`}
+            </Text>
+          </View>
+        </ScrollView>
       ) : (
         <ScrollView
           refreshControl={
@@ -291,7 +281,6 @@ export default function ItemRequest() {
           {filteredRequests.map((request) => (
             <Pressable
               key={request.id}
-              onPress={() => openRequestDetails(request)}
               className="mb-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
               <View className="mb-3 flex-row items-start justify-between">
                 <View className="flex-1 flex-row">
@@ -300,7 +289,9 @@ export default function ItemRequest() {
                   </View>
 
                   <View className="flex-1">
-                    <Text className="font-semibold text-gray-900">{request.requester.name}</Text>
+                    <Text className="font-semibold text-gray-900">
+                      {request.requester?.name ?? 'Unknown'}
+                    </Text>
                     <Text className="text-sm text-gray-500">
                       Requested {dayjs(request.createdAt).fromNow()}
                     </Text>
@@ -331,7 +322,7 @@ export default function ItemRequest() {
 
               <View className="flex-row items-center justify-between border-t border-gray-100 pt-3">
                 <Pressable
-                  onPress={() => handleContact(request.requesterId)}
+                  onPress={() => handleContact(request.id)}
                   className="flex-row items-center rounded-lg bg-gray-100 px-3 py-2">
                   <MessageCircle size={16} color="#6B7280" />
                   <Text className="ml-2 text-sm font-medium text-gray-700">Contact</Text>
@@ -341,9 +332,9 @@ export default function ItemRequest() {
                   {request.status === 'PENDING' && (
                     <View className="flex-row gap-2">
                       <Pressable
-                        onPress={() => handleStatusChange(request.id, 'APPROVED')}
+                        onPress={() => handleStatusChange(request.id, 'COMPLETED')}
                         className="rounded-lg bg-emerald-100 px-3 py-2">
-                        <Text className="text-sm font-medium text-green-800">Approve</Text>
+                        <Text className="text-sm font-medium text-green-800">Mark Complete</Text>
                       </Pressable>
                       <Pressable
                         onPress={() => handleStatusChange(request.id, 'REJECTED')}
@@ -351,14 +342,6 @@ export default function ItemRequest() {
                         <Text className="text-sm font-medium text-red-800">Reject</Text>
                       </Pressable>
                     </View>
-                  )}
-
-                  {request.status === 'APPROVED' && (
-                    <Pressable
-                      onPress={() => handleStatusChange(request.id, 'COMPLETED')}
-                      className="rounded-lg bg-blue-100 px-3 py-2">
-                      <Text className="text-sm font-medium text-blue-800">Mark Complete</Text>
-                    </Pressable>
                   )}
                 </View>
               </View>
@@ -409,148 +392,6 @@ export default function ItemRequest() {
               className="mt-6 rounded-2xl bg-gray-200 py-4">
               <Text className="text-center font-semibold text-gray-700">Cancel</Text>
             </Pressable>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Request Details Modal */}
-      <Modal
-        visible={showRequestModal}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={closeRequestDetails}>
-        <View className="flex-1 items-end justify-end bg-black/50">
-          <View className="max-h-[90%] w-full rounded-t-3xl bg-white p-6">
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <View className="mb-6 flex-row items-center justify-between">
-                <Text className="text-xl font-bold text-gray-900">Request Details</Text>
-                <Pressable onPress={closeRequestDetails} className="p-2">
-                  <X size={24} color="#6B7280" />
-                </Pressable>
-              </View>
-
-              {selectedRequest && (
-                <>
-                  {/* Requester Info */}
-                  <View className="mb-6 rounded-xl bg-gray-50 p-4">
-                    <View className="flex-row items-center">
-                      <View className="mr-4 h-14 w-14 items-center justify-center rounded-full bg-gray-300">
-                        <User size={24} color="#6B7280" />
-                      </View>
-
-                      <View className="flex-1">
-                        <Text className="text-lg font-semibold text-gray-900">
-                          Name: {selectedRequest.requester.name}
-                        </Text>
-                        <Text className="text-gray-600">
-                          Requested {dayjs(selectedRequest.createdAt).fromNow()}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-
-                  {/* Request Details */}
-                  <View className="mb-6">
-                    <Text className="mb-4 text-lg font-semibold text-gray-900">
-                      Request Information
-                    </Text>
-
-                    <View className="gap-4">
-                      <View className="flex-row items-center">
-                        <Package size={20} color="#6B7280" />
-                        <View className="ml-4 flex-1">
-                          <Text className="font-medium text-gray-900">Quantity Requested</Text>
-                          <Text className="text-gray-600">{selectedRequest.quantity} units</Text>
-                        </View>
-                      </View>
-
-                      <View className="flex-row items-center">
-                        <Calendar size={20} color="#6B7280" />
-                        <View className="ml-4 flex-1">
-                          <Text className="font-medium text-gray-900">Request Date</Text>
-                          <Text className="text-gray-600">
-                            {dayjs(selectedRequest.createdAt).format('MMMM DD, YYYY hh:mm A')}
-                          </Text>
-                        </View>
-                      </View>
-
-                      <View className="flex-row items-center">
-                        <Clock size={20} color="#6B7280" />
-                        <View className="ml-4 flex-1">
-                          <Text className="font-medium text-gray-900">Status</Text>
-                          <View
-                            className={`self-start rounded-full px-3 py-1 ${getStatusColor(selectedRequest.status)}`}>
-                            <Text className="font-medium">
-                              {getStatusText(selectedRequest.status)}
-                            </Text>
-                          </View>
-                        </View>
-                      </View>
-                    </View>
-                  </View>
-
-                  {/* Message */}
-                  {selectedRequest.message && (
-                    <View className="mb-6">
-                      <Text className="mb-2 text-lg font-semibold text-gray-900">
-                        Message from Requester
-                      </Text>
-                      <View className="rounded-xl bg-gray-50 p-4">
-                        <Text className="leading-relaxed text-gray-600">
-                          &quot;{selectedRequest.message}&quot;
-                        </Text>
-                      </View>
-                    </View>
-                  )}
-
-                  {/* Actions */}
-                  {selectedRequest.status !== 'COMPLETED' && (
-                    <View className="mb-6">
-                      <Text className="mb-4 text-lg font-semibold text-gray-900">Actions</Text>
-
-                      {selectedRequest.status === 'PENDING' && (
-                        <View className="flex-row gap-3">
-                          <Pressable
-                            onPress={() => {
-                              handleStatusChange(selectedRequest.id, 'APPROVED');
-                              closeRequestDetails();
-                            }}
-                            className="flex-1 rounded-2xl bg-emerald-500 py-4">
-                            <Text className="text-center font-semibold text-white">
-                              Approve Request
-                            </Text>
-                          </Pressable>
-
-                          <Pressable
-                            onPress={() => {
-                              handleStatusChange(selectedRequest.id, 'REJECTED');
-                              closeRequestDetails();
-                            }}
-                            className="flex-1 rounded-2xl bg-red-500 py-4">
-                            <Text className="text-center font-semibold text-white">
-                              Reject Request
-                            </Text>
-                          </Pressable>
-                        </View>
-                      )}
-
-                      {selectedRequest.status === 'APPROVED' && (
-                        <Pressable
-                          onPress={() => {
-                            handleStatusChange(selectedRequest.id, 'COMPLETED');
-                            closeRequestDetails();
-                          }}
-                          className="rounded-2xl bg-blue-500 py-4">
-                          <Text className="text-center font-semibold text-white">
-                            Mark as Completed
-                          </Text>
-                        </Pressable>
-                      )}
-                    </View>
-                  )}
-                </>
-              )}
-            </ScrollView>
           </View>
         </View>
       </Modal>

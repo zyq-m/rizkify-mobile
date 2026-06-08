@@ -67,7 +67,9 @@ export const useUser = () => {
         if (!user?.id) throw new Error('Not authenticated');
         const { data, error } = await supabase
           .from('items')
-          .select('*, images:item_images(*), category:categories(*)')
+          .select(
+            '*, images:item_images(*), category:categories(*), likedItems:liked_items(count), pendingRequests:item_requests(count)'
+          )
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
         if (error) throw error;
@@ -79,8 +81,8 @@ export const useUser = () => {
           return {
             ...toCamelCase(item),
             location: toCamelCase(location),
-            likeCount: 0,
-            pendingRequestCount: 0,
+            likeCount: item.likedItems?.[0]?.count ?? 0,
+            pendingRequestCount: item.pendingRequests?.[0]?.count ?? 0,
           };
         }) as MyItemRes[];
       },
@@ -111,7 +113,9 @@ export const useUser = () => {
         if (!user?.id) throw new Error('Not authenticated');
         const { data, error } = await supabase
           .from('item_requests')
-          .select('*, item:items(*, images:item_images(*)), provider:users!item_requests_provider_id_fkey(*)')
+          .select(
+            '*, item:items(*, images:item_images(*)), provider:users!item_requests_provider_id_fkey(*)'
+          )
           .eq('requester_id', user.id);
         if (error) throw error;
         return toCamelCase<ReqItemResponse[]>(data || []);
@@ -127,7 +131,9 @@ export const useUser = () => {
         if (!user?.id) throw new Error('Not authenticated');
         const { data, error } = await supabase
           .from('item_requests')
-          .select('*, item:items(*, images:item_images(*)), requester:users!item_requests_requester_id_fkey(*)')
+          .select(
+            '*, item:items(*, images:item_images(*)), requester:users!item_requests_requester_id_fkey(*)'
+          )
           .eq('provider_id', user.id);
         if (error) throw error;
         return toCamelCase<ReqItemResponse[]>(data || []);

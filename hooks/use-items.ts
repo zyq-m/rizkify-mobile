@@ -46,6 +46,8 @@ export const useItems = () => {
           query = query.ilike('name', `%${filters.search}%`);
         }
 
+        query = query.gt('expiry', new Date().toISOString());
+
         let sortColumn = 'created_at';
         let ascending = false;
         if (filters?.sortBy === 'expiring') {
@@ -91,6 +93,7 @@ export const useItems = () => {
           .select(
             '*, images:item_images(*), user:users(*), category:categories(*), likedBy:liked_items(*), requests:item_requests(*)'
           )
+          .gt('expiry', new Date().toISOString())
           .order('created_at', { ascending: false })
           .limit(10);
         if (error) throw error;
@@ -127,7 +130,7 @@ export const useItems = () => {
         const { data, error } = await supabase
           .from('items')
           .select(
-            '*, images:item_images(*), user:users(*), category:categories(*), likedBy:liked_items(*), requests:item_requests(*)'
+            '*, images:item_images(*), user:users(*), category:categories(*), likedBy:liked_items(*), requests:item_requests(*, requester:users!item_requests_requester_id_fkey(*))'
           )
           .eq('id', id)
           .single();
@@ -367,14 +370,41 @@ export const useItems = () => {
   const useUpdateRequest = () => {
     return useMutation({
       mutationFn: async (data: { id: string; status: ItemRequestStatus }) => {
-        const { error } = await supabase
+        if (!user?.id) throw new Error('Not authenticated');
+
+        const { data: request, error: reqError } = await supabase
+          .from('item_requests')
+          .select('item_id, quantity')
+          .eq('id', data.id)
+          .single();
+        if (reqError) throw reqError;
+
+        const { error: updateError } = await supabase
           .from('item_requests')
           .update({ status: data.status })
           .eq('id', data.id);
-        if (error) throw error;
+        if (updateError) throw updateError;
+
+        if (data.status === 'COMPLETED') {
+          const { data: item, error: itemError } = await supabase
+            .from('items')
+            .select('quantity')
+            .eq('id', request.item_id)
+            .single();
+          if (itemError) throw itemError;
+
+          const newQuantity = Math.max(0, (item.quantity ?? 0) - (request.quantity ?? 1));
+          const { error: updateItemError } = await supabase
+            .from('items')
+            .update({ quantity: newQuantity })
+            .eq('id', request.item_id);
+          if (updateItemError) throw updateItemError;
+        }
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['reqItem'] });
+        queryClient.invalidateQueries({ queryKey: ['items'] });
+        queryClient.invalidateQueries({ queryKey: ['user', 'items'] });
       },
     });
   };
