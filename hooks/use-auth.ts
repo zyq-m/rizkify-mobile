@@ -29,7 +29,6 @@ export const useAuth = () => {
     },
     onSuccess: (data) => {
       setAuth(data.user, data.session);
-      queryClient.setQueryData(['user'], data.user);
     },
   });
 
@@ -45,7 +44,6 @@ export const useAuth = () => {
     },
     onSuccess: (data) => {
       setAuth(data.user, data.session);
-      queryClient.setQueryData(['user'], data.user);
     },
   });
 

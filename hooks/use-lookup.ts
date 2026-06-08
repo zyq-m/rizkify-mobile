@@ -1,17 +1,21 @@
 import { Category, Condition } from '@/api/service';
 import { supabase } from '@/lib/supabase';
 import { toCamelCase } from '@/utils/map';
-import dayjs from 'dayjs';
 import { useQuery } from '@tanstack/react-query';
+import dayjs from 'dayjs';
 
 export const useLookup = () => {
   const useCategories = () => {
     return useQuery({
       queryKey: ['lookup', 'categories'],
       queryFn: async () => {
-        const { data, error } = await supabase.from('categories').select('*');
+        const { data, error } = await supabase.from('categories').select('*, items(count)');
         if (error) throw error;
-        return toCamelCase<Category[]>(data || []);
+
+        return (data || []).map((cat) => ({
+          ...toCamelCase<Category>(cat),
+          _count: { items: (cat as any).items?.[0]?.count ?? 0 },
+        }));
       },
       staleTime: 30 * 60 * 1000,
     });
@@ -36,7 +40,11 @@ export const useLookup = () => {
         { id: '1', label: 'Today', value: dayjs().format('YYYY-MM-DD') },
         { id: '2', label: 'Tomorrow', value: dayjs().add(1, 'day').format('YYYY-MM-DD') },
         { id: '3', label: 'This Week', value: dayjs().endOf('week').format('YYYY-MM-DD') },
-        { id: '4', label: 'Next Week', value: dayjs().add(1, 'week').endOf('week').format('YYYY-MM-DD') },
+        {
+          id: '4',
+          label: 'Next Week',
+          value: dayjs().add(1, 'week').endOf('week').format('YYYY-MM-DD'),
+        },
         { id: '5', label: 'This Month', value: dayjs().endOf('month').format('YYYY-MM-DD') },
       ]),
   });

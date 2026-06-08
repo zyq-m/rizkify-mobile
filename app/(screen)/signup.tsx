@@ -31,6 +31,7 @@ export default function Signup() {
     defaultValues: {
       name: '',
       email: '',
+      phone: '',
       password: '',
       confirmPassword: '',
     },
@@ -50,6 +51,7 @@ export default function Signup() {
           router.replace('/(screen)/(drawer)');
         },
         onError: (error) => {
+          Alert.alert('Error', error.message);
           console.log(error.message);
         },
       }

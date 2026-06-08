@@ -3,9 +3,10 @@ import SetSearchLocationModal, { SearchLocation } from '@/components/custom/set-
 import TrendingItemCard from '@/components/custom/trending-item';
 import { useItems } from '@/hooks/use-items';
 import { useUser } from '@/hooks/use-user';
+import { useQueryClient } from '@tanstack/react-query';
 import { Bell, MapPin, TrendingUp } from 'lucide-react-native';
-import React, { useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 
 export default function HomeScreen() {
   const [showLocationModal, setShowLocationModal] = useState(false);
@@ -13,6 +14,20 @@ export default function HomeScreen() {
   const { mutate: setProfile, isPending } = useUpdateProfile();
   const { data: profile } = useProfile();
   const { data: trending } = useItems().useTrending();
+  const queryClient = useQueryClient();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['lookup', 'categories'] }),
+        queryClient.invalidateQueries({ queryKey: ['items', 'trending'] }),
+      ]);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [queryClient]);
 
   const handleSetLocation = (location: SearchLocation) => {
     setProfile({ location: JSON.stringify(location) });
@@ -47,7 +62,10 @@ export default function HomeScreen() {
         </Pressable>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} className="gap-2">
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        className="gap-2"
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
         {/* Categories */}
         <View className="mt2">
           <Category />
