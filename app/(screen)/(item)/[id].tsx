@@ -5,7 +5,7 @@ import dayjs from 'dayjs';
 import relativetime from 'dayjs/plugin/relativeTime';
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
 import { Calendar, Heart, MapPin, Package, User } from 'lucide-react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Image,
@@ -27,8 +27,9 @@ export default function ItemDetails() {
 
   const { user } = useAuthStore();
 
-  const [imageError, setImageError] = useState(false);
+  const [imageErrorStates, setImageErrorStates] = useState<Record<number, boolean>>({});
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const imageScrollRef = useRef<ScrollView>(null);
   const [isLiked, setIsLiked] = useState(item?.isLiked);
   const [selectedQuantity, setSelectedQuantity] = useState(1);
   const [message, setMessage] = useState<string | undefined>(undefined);
@@ -120,14 +121,40 @@ export default function ItemDetails() {
       <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
         {/* Image Gallery */}
         <View className="relative">
-          {item.images.length > 0 && !imageError ? (
+          {item.images.length > 0 ? (
             <>
-              <Image
-                source={{ uri: item.images[selectedImageIndex].imageUrl }}
-                className="h-96 w-full"
-                resizeMode="cover"
-                onError={() => setImageError(true)}
-              />
+              <ScrollView
+                ref={imageScrollRef}
+                horizontal
+                pagingEnabled
+                nestedScrollEnabled
+                showsHorizontalScrollIndicator={false}
+                onMomentumScrollEnd={(e) => {
+                  const page = Math.round(
+                    e.nativeEvent.contentOffset.x /
+                      e.nativeEvent.layoutMeasurement.width,
+                  );
+                  setSelectedImageIndex(page);
+                }}>
+                {item.images.map((img, idx) => (
+                  <View key={idx} className="h-96 w-screen">
+                    {imageErrorStates[idx] ? (
+                      <View className="h-full w-full items-center justify-center bg-gray-100">
+                        <Package size={80} color="#D1D5DB" />
+                      </View>
+                    ) : (
+                      <Image
+                        source={{ uri: img.imageUrl }}
+                        className="h-full w-full"
+                        resizeMode="cover"
+                        onError={() =>
+                          setImageErrorStates((prev) => ({ ...prev, [idx]: true }))
+                        }
+                      />
+                    )}
+                  </View>
+                ))}
+              </ScrollView>
 
               {/* Image Indicators */}
               {item.images.length > 1 && (
@@ -137,7 +164,13 @@ export default function ItemDetails() {
                       {item.images.map((_, index) => (
                         <Pressable
                           key={index}
-                          onPress={() => setSelectedImageIndex(index)}
+                          onPress={() => {
+                            setSelectedImageIndex(index);
+                            imageScrollRef.current?.scrollTo({
+                              x: index * 414,
+                              animated: true,
+                            });
+                          }}
                           className={`mx-1 h-2 w-2 rounded-full ${
                             index === selectedImageIndex ? 'bg-white' : 'bg-white/50'
                           }`}
