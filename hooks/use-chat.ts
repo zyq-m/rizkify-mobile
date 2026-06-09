@@ -85,13 +85,15 @@ export const useChat = () => {
         const { data: request, error } = await supabase
           .from('item_requests')
           .select(
-            '*, item:items(*), requester:users!item_requests_requester_id_fkey(*), provider:users!item_requests_provider_id_fkey(*), chats:chat_messages(*, sender:users!chat_messages_sender_id_fkey(*), receiver:users!chat_messages_receiver_id_fkey(*))'
+            '*, item:items(*, images:item_images(*)), requester:users!item_requests_requester_id_fkey(*), provider:users!item_requests_provider_id_fkey(*), chats:chat_messages(*, sender:users!chat_messages_sender_id_fkey(*), receiver:users!chat_messages_receiver_id_fkey(*))'
           )
           .eq('id', reqItemId)
           .single();
         if (error) throw error;
 
-        return toCamelCase<GetMessageRes>(request);
+        return {
+          ...toCamelCase<GetMessageRes>(request),
+        };
       },
       enabled: !!reqItemId,
       staleTime: 0,

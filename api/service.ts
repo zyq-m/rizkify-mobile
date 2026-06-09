@@ -141,5 +141,5 @@ export type GetMessageRes = RequestItem & {
   provider: Partial<User>;
   requester: Partial<User>;
   chats: Message[];
-  item: Partial<Item>;
+  item: Partial<Item> & { images: ItemImage[] };
 };

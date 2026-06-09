@@ -29,8 +29,6 @@ export default function HomeScreen() {
     }
   }, [queryClient]);
 
-  console.log(profile);
-
   const handleSetLocation = (_location: SearchLocation) => {
     setShowLocationModal(false);
   };

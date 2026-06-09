@@ -67,8 +67,8 @@ export default function ChatsListScreen() {
       className="flex-row items-center bg-white p-4 active:bg-gray-50"
       onPress={() => navigateToChat(item)}>
       <View className="mr-3 h-12 w-12 items-center justify-center rounded-full bg-gray-200">
-        {item.partner.imageUrl ? (
-          <Image source={{ uri: item.partner.imageUrl }} className="h-12 w-12 rounded-full" />
+        {item.item.image ? (
+          <Image source={{ uri: item.item.image }} className="h-12 w-12 rounded-full" />
         ) : (
           <User size={20} color="#6B7280" />
         )}
@@ -78,7 +78,9 @@ export default function ChatsListScreen() {
           <Text className="flex-1 text-base font-medium text-gray-900" numberOfLines={1}>
             {item.partner.name} • {item.item.name}
           </Text>
-          <Text className="ml-2 text-xs text-gray-500">{dayjs().to(item.lastMessage.createdAt)}</Text>
+          <Text className="ml-2 text-xs text-gray-500">
+            {dayjs().to(item.lastMessage.createdAt)}
+          </Text>
         </View>
         <View className="flex-row items-center justify-between">
           <Text

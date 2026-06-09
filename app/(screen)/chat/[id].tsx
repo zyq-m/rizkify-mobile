@@ -2,15 +2,7 @@ import { useChat } from '@/hooks/use-chat';
 import { useAuthStore } from '@/store/auth-store';
 import dayjs from 'dayjs';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import {
-  ArrowLeft,
-  Check,
-  CheckCheck,
-  Image as ImageIcon,
-  MoreVertical,
-  Send,
-  User,
-} from 'lucide-react-native';
+import { ArrowLeft, Check, CheckCheck, MoreVertical, Send, User } from 'lucide-react-native';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
@@ -225,30 +217,34 @@ export default function ChatScreen() {
   const otherUser = getOtherUser();
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-gray-100">
       <StatusBar barStyle="dark-content" />
 
       {/* Header */}
       <View className="border-b border-gray-200 bg-white px-4 pb-4 pt-12">
-        <View className="flex-row items-center justify-between">
+        <View className="flex-row items-center justify-between gap-4">
+          {/* Item */}
           <View className="flex-1 flex-row items-center">
             <Pressable onPress={handleBack} className="mr-2 p-2">
               <ArrowLeft size={24} color="#000" />
             </Pressable>
 
-            <View className="flex-1">
-              <Text className="text-lg font-semibold text-gray-900" numberOfLines={1}>
-                {otherUser.name}
-              </Text>
-              <Text className="text-sm text-gray-500" numberOfLines={1}>
-                {conversationData.item.name}
+            <View className="flex-1 flex-row items-center gap-2">
+              <Image
+                source={{ uri: conversationData.item.images[0].imageUrl }}
+                className="size-9 rounded-full"
+              />
+              <Text className="flex-1 text-base font-medium text-gray-900" numberOfLines={1}>
+                {otherUser.name} • {conversationData?.item?.name}
               </Text>
             </View>
           </View>
 
-          <Pressable className="p-2">
-            <MoreVertical size={20} color="#6B7280" />
-          </Pressable>
+          <View>
+            <Pressable className="p-2">
+              <MoreVertical size={20} color="#6B7280" />
+            </Pressable>
+          </View>
         </View>
 
         {/* Request Status Banner */}
@@ -302,12 +298,13 @@ export default function ChatScreen() {
               index === messages.length - 1 || messages[index + 1]?.senderId !== msg.senderId;
 
             return (
-              <View key={msg.id} className={`mb-3 ${isUser ? 'items-end' : 'items-start'}`}>
-                <View className={`max-w-[80%] flex-row ${isUser ? 'flex-row-reverse' : ''}`}>
+              <View key={msg.id} className={`mb-1.5 ${isUser ? 'items-end' : 'items-start'}`}>
+                <View
+                  className={`max-w-[75%] flex-row items-end ${isUser ? 'flex-row-reverse' : ''}`}>
                   {/* Avatar */}
                   {!isUser && (
                     <View
-                      className={`mr-2 mt-3 h-8 w-8 items-center justify-center rounded-full bg-gray-300 ${showAvatar ? '' : 'opacity-0'}`}>
+                      className={`mr-2 h-7 w-7 items-center justify-center rounded-full bg-gray-300 ${showAvatar ? '' : 'opacity-0'}`}>
                       {showAvatar &&
                         (otherUser.imageUrl ? (
                           <Image
@@ -323,31 +320,29 @@ export default function ChatScreen() {
                   {/* Message Bubble */}
                   <View className={isUser ? 'mr-2' : ''}>
                     <View
-                      className={`rounded-2xl px-4 py-3 ${
-                        isUser ? 'rounded-br-md bg-blue-500' : 'rounded-bl-md bg-gray-100'
+                      className={`flex-row flex-wrap justify-end rounded-2xl px-3 py-2 ${
+                        isUser
+                          ? 'rounded-br-md bg-green-700'
+                          : 'rounded-bl-md border border-gray-200 bg-white'
                       }`}>
-                      <Text className={`text-base ${isUser ? 'text-white' : 'text-gray-900'}`}>
+                      <Text
+                        className={`text-[15px] leading-5 ${isUser ? 'mr-2 text-white' : 'mr-2 text-gray-900'}`}>
                         {msg.content}
                       </Text>
-                    </View>
-
-                    {/* Message Time and Status */}
-                    <View
-                      className={`mt-1 flex-row items-center ${isUser ? 'justify-end' : 'justify-start'}`}>
-                      <Text className="mr-2 text-xs text-gray-500">
-                        {formatMessageTime(msg.createdAt)}
-                      </Text>
-                      {isUser &&
-                        (msg.isRead ? (
-                          <CheckCheck size={12} color="#10B981" />
-                        ) : (
-                          <Check size={12} color="#9CA3AF" />
-                        ))}
+                      <View className="-mb-0.5 mt-0.5 flex-row items-center justify-end gap-0.5">
+                        <Text
+                          className={`text-[11px] ${isUser ? 'text-white/70' : 'text-gray-400'}`}>
+                          {formatMessageTime(msg.createdAt)}
+                        </Text>
+                        {isUser &&
+                          (msg.isRead ? (
+                            <CheckCheck size={11} color="white" />
+                          ) : (
+                            <Check size={11} color="white" />
+                          ))}
+                      </View>
                     </View>
                   </View>
-
-                  {/* Spacer for user messages */}
-                  {isUser && <View className="mr-2 h-8 w-8" />}
                 </View>
               </View>
             );
@@ -359,10 +354,6 @@ export default function ChatScreen() {
           className="border-t border-gray-200 bg-white px-4 py-3"
           style={{ marginBottom: keyboardHeight }}>
           <View className="flex-row items-center">
-            <Pressable className="mr-1 p-2">
-              <ImageIcon size={20} color="#6B7280" />
-            </Pressable>
-
             <TextInput
               value={message}
               onChangeText={setMessage}
