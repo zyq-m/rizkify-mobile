@@ -51,7 +51,37 @@ export default function useLocation() {
         };
       }
     } catch (error) {
-      console.error('Reverse geocoding error:', error);
+      console.warn('expo-location reverseGeocodeAsync failed, trying Nominatim...', error);
+    }
+
+    // Fallback to OpenStreetMap Nominatim API
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
+        {
+          headers: {
+            'User-Agent': 'Rizkify/1.0',
+            Accept: 'application/json',
+          },
+        }
+      );
+      const data = await res.json();
+
+      console.log(data);
+
+      if (data?.display_name) {
+        return {
+          formatted: data.display_name,
+          street: data.address?.road ?? data.address?.pedestrian ?? null,
+          city: data.address?.city ?? data.address?.town ?? data.address?.village ?? null,
+          region: data.address?.state ?? null,
+          country: data.address?.country ?? null,
+          postalCode: data.address?.postcode ?? null,
+          name: data.address?.house_number ?? null,
+        };
+      }
+    } catch (error) {
+      console.warn('Nominatim reverse geocoding also failed', error);
     }
 
     return null;

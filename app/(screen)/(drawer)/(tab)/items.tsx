@@ -219,7 +219,6 @@ export default function ItemsListScreen() {
         onClose={() => setShowLocationModal(false)}
         onLocationSet={setSearchLocation}
         initialLocation={searchLocation ?? profile?.location}
-        userId="current-user-id" // Pass actual user ID
         btnLabel="Apply Filter"
       />
     </View>

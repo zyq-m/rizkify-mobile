@@ -1,6 +1,7 @@
 import LeafletMap, { LeafletMapHandle } from '@/components/leaflet/leaflet-map';
 import { Coords } from '@/components/leaflet/types';
 import useLocation from '@/hooks/use-location';
+import { useUser } from '@/hooks/use-user';
 import { Crosshair, MapPin, X } from 'lucide-react-native';
 import React, { JSX, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, Text, View } from 'react-native';
@@ -70,10 +71,12 @@ export default function SetSearchLocationModal({
     getAddressFromCoords,
   } = useLocation();
 
+  const { useUpdateProfile } = useUser();
+  const { mutate: saveProfile, isPending } = useUpdateProfile();
+
   const [searchLocation, setSearchLocation] = useState<SearchLocation | null>(initialLocation);
   const [selectedRange, setSelectedRange] = useState<number>(initialLocation?.range || 5);
   const [gettingAddress, setGettingAddress] = useState<boolean>(false);
-  const [saving, setSaving] = useState<boolean>(false);
 
   const animateToRegion = (coords: Coordinates, zoom: number = 13): void => {
     mapRef.current?.animateToRegion({
@@ -192,25 +195,25 @@ export default function SetSearchLocationModal({
     }
   };
 
-  const handleSaveLocation = async (): Promise<void> => {
+  const handleSaveLocation = (): void => {
     if (!searchLocation) {
       Alert.alert('Select Location', 'Please select a location on the map first.');
       return;
     }
 
-    setSaving(true);
-    try {
-      if (userId) {
-        console.log('Saving to database for user:', userId);
+    saveProfile(
+      { location: JSON.stringify(searchLocation) },
+      {
+        onSuccess: () => {
+          onLocationSet(searchLocation);
+          onClose();
+        },
+        onError: (error) => {
+          console.error('Error saving location:', error);
+          Alert.alert('Error', 'Failed to save location. Please try again.');
+        },
       }
-      onLocationSet(searchLocation);
-      onClose();
-    } catch (error) {
-      console.error('Error saving location:', error);
-      Alert.alert('Error', 'Failed to save location. Please try again.');
-    } finally {
-      setSaving(false);
-    }
+    );
   };
 
   const handleClose = (): void => {
@@ -347,11 +350,11 @@ export default function SetSearchLocationModal({
           <View className="flex-row gap-3">
             <Pressable
               onPress={handleSaveLocation}
-              disabled={!searchLocation || saving}
+              disabled={!searchLocation || isPending}
               className={`flex-1 items-center justify-center rounded-lg py-3 ${
-                searchLocation && !saving ? 'bg-green-500 active:bg-green-600' : 'bg-gray-300'
+                searchLocation && !isPending ? 'bg-green-500 active:bg-green-600' : 'bg-gray-300'
               }`}>
-              {saving ? (
+              {isPending ? (
                 <ActivityIndicator size="small" color="white" />
               ) : (
                 <Text className="text-base font-semibold text-white">

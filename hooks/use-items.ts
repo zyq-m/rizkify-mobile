@@ -60,7 +60,12 @@ export const useItems = () => {
         const { data, error } = await query;
         if (error) throw error;
 
-        return (data || []).map((item: any) => {
+        const refLat = filters?.lat ? parseFloat(filters.lat) : userCoords?.latitude;
+        const refLng = filters?.lng ? parseFloat(filters.lng) : userCoords?.longitude;
+        const maxDist = filters?.maxDistance ? parseFloat(filters.maxDistance) : Infinity;
+        const hasReference = refLat != null && refLng != null;
+
+        let results = (data || []).map((item: any) => {
           const rawLocation = item.location;
           const location = typeof rawLocation === 'string' ? JSON.parse(rawLocation) : rawLocation;
           const itemCoords =
@@ -68,7 +73,9 @@ export const useItems = () => {
               ? { latitude: location.latitude, longitude: location.longitude }
               : null;
           const distance =
-            userCoords && itemCoords ? calculateDistance(userCoords, itemCoords) : Infinity;
+            hasReference && itemCoords
+              ? calculateDistance({ latitude: refLat, longitude: refLng }, itemCoords)
+              : Infinity;
           const distanceText = distance !== Infinity ? formatDistance(distance) : '';
           return {
             ...toCamelCase(item),
@@ -80,6 +87,16 @@ export const useItems = () => {
             distanceText,
           };
         }) as unknown as ItemResponse[];
+
+        if (hasReference && maxDist !== Infinity) {
+          results = results.filter((item: any) => item.distance <= maxDist);
+        }
+
+        if (filters?.sortBy === 'nearest') {
+          results.sort((a: any, b: any) => (a.distance ?? Infinity) - (b.distance ?? Infinity));
+        }
+
+        return results;
       },
     });
   };
@@ -88,6 +105,11 @@ export const useItems = () => {
     return useQuery({
       queryKey: ['items', 'trending'],
       queryFn: async () => {
+        const refLat = userCoords?.latitude;
+        const refLng = userCoords?.longitude;
+        const maxDist = profile?.location?.range ?? Infinity;
+        const hasReference = refLat != null && refLng != null;
+
         const { data, error } = await supabase
           .from('items')
           .select(
@@ -95,30 +117,35 @@ export const useItems = () => {
           )
           .gt('expiry', new Date().toISOString())
           .order('created_at', { ascending: false })
-          .limit(10);
+          .limit(50);
         if (error) throw error;
 
-        return (data || []).map((item: any) => {
-          const rawLocation = item.location;
-          const location = typeof rawLocation === 'string' ? JSON.parse(rawLocation) : rawLocation;
-          const itemCoords =
-            location?.latitude != null
-              ? { latitude: location.latitude, longitude: location.longitude }
-              : null;
-          const distance =
-            userCoords && itemCoords ? calculateDistance(userCoords, itemCoords) : Infinity;
-          const distanceText = distance !== Infinity ? formatDistance(distance) : '';
-          return {
-            ...toCamelCase(item),
-            location: toCamelCase(location),
-            isLiked: true,
-            likeCount: item.likedBy?.length ?? 0,
-            pendingRequest: item.requests?.filter((r: any) => r.status === 'PENDING').length ?? 0,
-            trendingRank: 0,
-            distance,
-            distanceText,
-          };
-        }) as unknown as TrendingItemRes[];
+        return (data || [])
+          .map((item: any) => {
+            const rawLocation = item.location;
+            const location = typeof rawLocation === 'string' ? JSON.parse(rawLocation) : rawLocation;
+            const itemCoords =
+              location?.latitude != null
+                ? { latitude: location.latitude, longitude: location.longitude }
+                : null;
+            const distance =
+              hasReference && itemCoords
+                ? calculateDistance({ latitude: refLat, longitude: refLng }, itemCoords)
+                : Infinity;
+            const distanceText = distance !== Infinity ? formatDistance(distance) : '';
+            return {
+              ...toCamelCase(item),
+              location: toCamelCase(location),
+              isLiked: true,
+              likeCount: item.likedBy?.length ?? 0,
+              pendingRequest: item.requests?.filter((r: any) => r.status === 'PENDING').length ?? 0,
+              trendingRank: 0,
+              distance,
+              distanceText,
+            };
+          })
+          .filter((item: any) => item.distance <= maxDist)
+          .slice(0, 10) as unknown as TrendingItemRes[];
       },
     });
   };
