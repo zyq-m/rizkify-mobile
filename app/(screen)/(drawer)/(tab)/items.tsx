@@ -34,6 +34,9 @@ export default function ItemsListScreen() {
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [searchLocation, setSearchLocation] = useState<SearchLocation | null>(null);
 
+  const { useProfile } = useUser();
+  const { data: profile } = useProfile();
+
   const debouncedSearch = useDebounce(searchQuery, 900);
 
   const { useItems: useSearchItems } = useItems();
@@ -44,14 +47,11 @@ export default function ItemsListScreen() {
   } = useSearchItems({
     categoryId: category?.id,
     name: debouncedSearch.toLowerCase().trim(),
-    lat: searchLocation?.latitude.toString(),
-    lng: searchLocation?.longitude.toString(),
+    lat: profile?.location?.latitude.toString(),
+    lng: profile?.location?.longitude.toString(),
     maxDistance: searchLocation?.range.toString(),
     sortBy: selectedSort,
   });
-
-  const { useProfile } = useUser();
-  const { data: profile } = useProfile();
 
   const clearLocationFilter = () => {
     setSearchLocation(null);
@@ -218,7 +218,7 @@ export default function ItemsListScreen() {
         visible={showLocationModal}
         onClose={() => setShowLocationModal(false)}
         onLocationSet={setSearchLocation}
-        initialLocation={searchLocation ?? profile?.location}
+        initialLocation={profile?.location}
         btnLabel="Apply Filter"
       />
     </View>

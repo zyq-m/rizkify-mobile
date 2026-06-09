@@ -123,7 +123,8 @@ export const useItems = () => {
         return (data || [])
           .map((item: any) => {
             const rawLocation = item.location;
-            const location = typeof rawLocation === 'string' ? JSON.parse(rawLocation) : rawLocation;
+            const location =
+              typeof rawLocation === 'string' ? JSON.parse(rawLocation) : rawLocation;
             const itemCoords =
               location?.latitude != null
                 ? { latitude: location.latitude, longitude: location.longitude }
