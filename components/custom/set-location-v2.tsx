@@ -199,7 +199,6 @@ export default function SetSearchLocationModal({
     searchLocations(debouncedQuery)
       .then((results) => {
         setSearchResults(results);
-        setShowSearchResults(results.length > 0);
       })
       .catch((err) => {
         console.error('Search error:', err);
@@ -357,6 +356,11 @@ export default function SetSearchLocationModal({
                 data={searchResults}
                 keyExtractor={(_item, index) => String(index)}
                 keyboardShouldPersistTaps="handled"
+                ListEmptyComponent={
+                  <View className="px-3 py-6">
+                    <Text className="text-center text-sm text-gray-400">No locations found</Text>
+                  </View>
+                }
                 renderItem={({ item }) => (
                   <Pressable
                     className="border-b border-gray-100 px-3 py-2.5 active:bg-gray-50"

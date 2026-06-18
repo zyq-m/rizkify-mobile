@@ -1,6 +1,33 @@
 import { Tabs } from 'expo-router';
 import { Home, ListChecks, MessageCircle, Plus, Search } from 'lucide-react-native';
 import React from 'react';
+import { View } from 'react-native';
+import { useChat } from '@/hooks/use-chat';
+
+function ChatTabIcon() {
+  const { useUnreadCount } = useChat();
+  const { data } = useUnreadCount();
+  const unreadCount = data?.count ?? 0;
+
+  return (
+    <View style={{ position: 'relative' }}>
+      <MessageCircle />
+      {unreadCount > 0 && (
+        <View
+          style={{
+            position: 'absolute',
+            top: -2,
+            right: -2,
+            width: 8,
+            height: 8,
+            borderRadius: 4,
+            backgroundColor: '#EF4444',
+          }}
+        />
+      )}
+    </View>
+  );
+}
 
 export default function TabLayout() {
   return (
@@ -33,7 +60,7 @@ export default function TabLayout() {
         name="chats"
         options={{
           title: 'Chat',
-          tabBarIcon: () => <MessageCircle />,
+          tabBarIcon: () => <ChatTabIcon />,
         }}
       />
       <Tabs.Screen
