@@ -13,9 +13,11 @@ import { router } from 'expo-router';
 import { Camera, ChevronRight, X } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
-import { Alert, Image, Pressable, ScrollView, View } from 'react-native';
+import { Image, Pressable, ScrollView, View } from 'react-native';
+import { useToast } from '@/providers/ToastProvider';
 
 export default function NewItemScreen() {
+  const { showToast } = useToast();
   const {
     control,
     handleSubmit,
@@ -56,7 +58,7 @@ export default function NewItemScreen() {
       },
       {
         onSuccess: () => {
-          Alert.alert('Success', 'Item listed successfully!');
+          showToast('success', 'Success', 'Item listed successfully!');
           clearImages();
           setCoords(null);
           reset();
@@ -64,7 +66,7 @@ export default function NewItemScreen() {
         },
         onError: (error) => {
           console.log('Create error:', error);
-          Alert.alert('Error', 'Failed to add item. Please try again.');
+          showToast('error', 'Error', 'Failed to add item. Please try again.');
         },
       }
     );

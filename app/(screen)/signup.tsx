@@ -3,8 +3,8 @@ import { router } from 'expo-router';
 import { ArrowRight, Eye, EyeOff, LogIn, Mail, Phone, User } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { useToast } from '@/providers/ToastProvider';
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -20,6 +20,7 @@ import { SignupFormT, signupSchema } from '@/utils/form/signup';
 export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const { showToast } = useToast();
   const { register } = useAuth();
 
   const {
@@ -47,11 +48,11 @@ export default function Signup() {
       },
       {
         onSuccess: () => {
-          Alert.alert('Success', 'Welcome to Rizkify! Your account has been created.');
+          showToast('success', 'Success', 'Welcome to Rizkify! Your account has been created.');
           router.replace('/(screen)/(drawer)');
         },
         onError: (error) => {
-          Alert.alert('Error', error.message);
+          showToast('error', 'Error', error.message);
           console.log(error.message);
         },
       }

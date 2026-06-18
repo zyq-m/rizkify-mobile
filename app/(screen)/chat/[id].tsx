@@ -2,12 +2,12 @@ import ConfirmDialog from '@/components/custom/confirm-dialog';
 import { useChat } from '@/hooks/use-chat';
 import { useItems } from '@/hooks/use-items';
 import { useAuthStore } from '@/store/auth-store';
+import { useToast } from '@/providers/ToastProvider';
 import dayjs from 'dayjs';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft, Check, CheckCheck, Send, User } from 'lucide-react-native';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Alert,
   Image,
   Keyboard,
   Platform,
@@ -38,6 +38,7 @@ export interface ChatMessage {
 export default function ChatScreen() {
   const { id: requestId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { showToast } = useToast();
   const scrollViewRef = useRef<ScrollView>(null);
   const [currentUserId, setCurrentUserId] = useState<string>('');
   const [message, setMessage] = useState('');
@@ -183,7 +184,7 @@ export default function ChatScreen() {
     } catch (error) {
       // Remove optimistic message on error
       setMessages((prev) => prev.filter((msg) => msg.id !== optimisticMessage.id));
-      Alert.alert('Error', 'Failed to send message');
+      showToast('error', 'Error', 'Failed to send message');
     }
   };
 

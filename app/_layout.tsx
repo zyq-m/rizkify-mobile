@@ -12,6 +12,7 @@ import AnimatedSplashScreen from '@/components/animated-splash-screen';
 import { cn } from '@/lib/cn';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { QueryProvider } from '@/providers/QueryProvider';
+import { ToastProvider } from '@/providers/ToastProvider';
 import { NAV_THEME } from '@/theme';
 import { SplashScreen as ExpoSplashScreen, Slot } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -74,10 +75,12 @@ export default function RootLayout() {
           <NavThemeProvider value={NAV_THEME['light']}>
             <GestureHandlerRootView style={{ flex: 1 }}>
               <QueryProvider>
-                <View
-                  className={cn('flex-1', isSplashAnimationComplete ? 'opacity-1' : 'opacity-0')}>
-                  <Slot />
-                </View>
+                <ToastProvider>
+                  <View
+                    className={cn('flex-1', isSplashAnimationComplete ? 'opacity-1' : 'opacity-0')}>
+                    <Slot />
+                  </View>
+                </ToastProvider>
               </QueryProvider>
             </GestureHandlerRootView>
           </NavThemeProvider>

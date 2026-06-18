@@ -8,7 +8,8 @@ import { Stack } from 'expo-router';
 import { Camera, User as UserIcon } from 'lucide-react-native';
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Alert, Image, Pressable, ScrollView, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, Text, View } from 'react-native';
+import { useToast } from '@/providers/ToastProvider';
 import { z } from 'zod';
 
 // Validation schema
@@ -21,6 +22,7 @@ type ProfileFormT = z.infer<typeof profileSchema>;
 
 export default function UpdateProfileScreen() {
   const { pickImage, images, clear: clearImages } = usePickImage();
+  const { showToast } = useToast();
 
   const { useProfile, useUpdateProfile } = useUser();
   const { data: profile } = useProfile();
@@ -39,7 +41,7 @@ export default function UpdateProfileScreen() {
       { name: data.name, phone: data.phone },
       {
         onSuccess: (res) => {
-          Alert.alert('Success', res.message);
+          showToast('success', 'Success', res.message);
         },
       }
     );

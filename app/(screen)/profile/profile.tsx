@@ -17,10 +17,12 @@ import {
   User,
 } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { Alert, Image, Pressable, ScrollView, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, Text, View } from 'react-native';
+import { useToast } from '@/providers/ToastProvider';
 
 export default function Profile() {
   const { useProfile, useUpdateProfile, useUserStats } = useUser();
+  const { showToast } = useToast();
   const { mutate: logout } = useAuth().logout;
   const { data: profile } = useProfile();
   const { data: stats } = useUserStats();
@@ -79,11 +81,11 @@ export default function Profile() {
     updateLocation(
       { location: JSON.stringify(location) },
       {
-        onSuccess: (res) => {
-          Alert.alert('Success', 'Your location updated successfully');
+        onSuccess: () => {
+          showToast('success', 'Success', 'Your location updated successfully');
         },
         onError: (error) => {
-          Alert.alert('Error', error.message);
+          showToast('error', 'Error', error.message);
         },
       }
     );
@@ -225,7 +227,7 @@ export default function Profile() {
           setShowLogout(false);
           logout(undefined, {
             onError: (err) => {
-              Alert.alert('Error', err.message);
+              showToast('error', 'Error', err.message);
             },
           });
         }}

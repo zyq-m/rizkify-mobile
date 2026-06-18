@@ -2,13 +2,13 @@ import ItemLocationMap from '@/components/custom/item-location-map';
 import { useChat } from '@/hooks/use-chat';
 import { useItems } from '@/hooks/use-items';
 import { useAuthStore } from '@/store/auth-store';
+import { useToast } from '@/providers/ToastProvider';
 import dayjs from 'dayjs';
 import relativetime from 'dayjs/plugin/relativeTime';
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
 import { Calendar, Heart, MapPin, Package, User } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  Alert,
   Image,
   Modal,
   Pressable,
@@ -22,6 +22,7 @@ import {
 export default function ItemDetails() {
   const navigation = useNavigation();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { showToast } = useToast();
   const { useItem, useCreateRequest } = useItems();
   const { data: item, isPending, error } = useItem(id);
   const requestItem = useCreateRequest();
@@ -66,7 +67,7 @@ export default function ItemDetails() {
                 itemRequestId: request.id,
               });
             }
-            Alert.alert('Item requested successfully');
+            showToast('success', 'Item requested successfully');
             setShowQuantityModal(false);
             setMessage(undefined);
             router.back();

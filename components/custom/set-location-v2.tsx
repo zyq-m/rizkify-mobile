@@ -9,7 +9,6 @@ import { Circle, MapPin, Search, X } from 'lucide-react-native';
 import React, { JSX, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Modal,
   Pressable,
@@ -17,6 +16,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useToast } from '@/providers/ToastProvider';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export interface Coordinates {
@@ -57,6 +57,7 @@ export default function SetSearchLocationModal({
   btnLabel = 'Save Location',
   hideRange = undefined,
 }: SetSearchLocationModalProps): JSX.Element {
+  const { showToast } = useToast();
   const mapRef = useRef<LeafletMapHandle>(null);
   const [mapReady, setMapReady] = useState(false);
   const {
@@ -237,7 +238,7 @@ export default function SetSearchLocationModal({
 
   const handleSaveLocation = (): void => {
     if (!searchLocation) {
-      Alert.alert('Select Location', 'Please select a location on the map first.');
+      showToast('warning', 'Select Location', 'Please select a location on the map first.');
       return;
     }
 
@@ -250,7 +251,7 @@ export default function SetSearchLocationModal({
         },
         onError: (error) => {
           console.error('Error saving location:', error);
-          Alert.alert('Error', 'Failed to save location. Please try again.');
+          showToast('error', 'Error', 'Failed to save location. Please try again.');
         },
       }
     );

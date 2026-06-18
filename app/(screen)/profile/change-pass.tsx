@@ -8,7 +8,8 @@ import { Stack } from 'expo-router';
 import { Eye, EyeOff, Lock } from 'lucide-react-native';
 import { useState } from 'react';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
-import { Alert, Pressable, ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
+import { useToast } from '@/providers/ToastProvider';
 import { z } from 'zod';
 
 // Password validation schema
@@ -36,6 +37,7 @@ export default function ChangePasswordScreen() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  const { showToast } = useToast();
   const { mutate: changePassword, isPending } = useUser().useChangePassword();
 
   const {
@@ -61,10 +63,10 @@ export default function ChangePasswordScreen() {
       {
         onSuccess: (res) => {
           reset();
-          Alert.alert('Success', res.data.message);
+          showToast('success', 'Success', res.data.message);
         },
         onError: (error) => {
-          Alert.alert('Error', error.message);
+          showToast('error', 'Error', error.message);
         },
       }
     );

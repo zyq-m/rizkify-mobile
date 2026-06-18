@@ -3,8 +3,8 @@ import { router } from 'expo-router';
 import { ArrowRight, Eye, EyeOff, Mail, UserPlus } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { useToast } from '@/providers/ToastProvider';
 import {
-  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -20,6 +20,7 @@ import { LoginFormT, loginSchema } from '@/utils/form/login';
 
 export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
+  const { showToast } = useToast();
 
   const {
     control,
@@ -39,18 +40,18 @@ export default function LoginScreen() {
     login.mutate(data, {
       onSuccess: () => {
         // On successful login
-        Alert.alert('Success', 'Welcome back to Rizkify!');
+        showToast('success', 'Success', 'Welcome back to Rizkify!');
         router.replace('/(screen)/(drawer)');
       },
 
       onError: (error) => {
-        Alert.alert('Error', error.message);
+        showToast('error', 'Error', error.message);
       },
     });
   };
 
   const handleForgotPassword = () => {
-    Alert.alert('Forgot Password', 'Password reset feature coming soon!');
+    showToast('info', 'Forgot Password', 'Password reset feature coming soon!');
   };
 
   const handleSignUp = () => {
@@ -69,7 +70,11 @@ export default function LoginScreen() {
         {/* Header Section */}
         <View className="px-6 pb-8 pt-20">
           <View className="mb-2 items-center">
-            <Image source={require('assets/icon.png')} className="mb-6 h-20 w-20" />
+            <Image
+              source={require('assets/icon.png')}
+              className="mb-6 h-20 w-20"
+              style={{ height: 80, width: 80 }}
+            />
             <Text className="text-center text-3xl font-bold text-gray-900">Welcome Back</Text>
             <Text className="mt-2 text-center text-gray-600">
               Sign in to continue reducing food waste

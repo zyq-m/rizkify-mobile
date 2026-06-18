@@ -4,7 +4,8 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { Camera, ChevronRight, X } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
-import { ActivityIndicator, Alert, Image, Pressable, ScrollView, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, ScrollView, View } from 'react-native';
+import { useToast } from '@/providers/ToastProvider';
 
 import Card from '@/components/custom/card';
 import CustomMap from '@/components/custom/custom-map';
@@ -58,6 +59,7 @@ export default function EditItemScreen() {
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const { showToast } = useToast();
 
   // Load item data when component mounts
   useEffect(() => {
@@ -109,14 +111,14 @@ export default function EditItemScreen() {
       },
       {
         onSuccess: () => {
-          Alert.alert('Success', 'Item updated successfully!');
+          showToast('success', 'Success', 'Item updated successfully!');
           clearImages();
           setImagesToDelete([]);
           router.back();
         },
         onError: (error) => {
           console.log('Update error:', error);
-          Alert.alert('Error', 'Failed to update item. Please try again.');
+          showToast('error', 'Error', 'Failed to update item. Please try again.');
         },
       }
     );
