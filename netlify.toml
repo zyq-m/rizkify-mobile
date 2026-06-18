@@ -1,0 +1,8 @@
+[build]
+  command = "npm run build:web"
+  publish = "dist"
+
+[[headers]]
+  for = "/service-worker.js"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
