@@ -1,9 +1,9 @@
+import { useToast } from '@/providers/ToastProvider';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router } from 'expo-router';
 import { ArrowRight, Eye, EyeOff, Mail, UserPlus } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { useToast } from '@/providers/ToastProvider';
 import {
   Image,
   KeyboardAvoidingView,
@@ -29,8 +29,8 @@ export default function LoginScreen() {
   } = useForm<LoginFormT>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: 'test@gmail.com',
-      password: 'Test123',
+      // email: 'test@gmail.com',
+      // password: 'Test123',
     },
   });
 
