@@ -34,11 +34,9 @@ export interface SearchLocation {
 function rangeToZoom(range: number): number {
   if (range <= 1) return 14;
   if (range <= 3) return 13;
-  if (range <= 5) return 12;
-  if (range <= 8) return 11;
-  if (range <= 12) return 10;
-  if (range <= 16) return 9;
-  return 12;
+  if (range <= 6) return 12;
+  if (range <= 12) return 11;
+  return 10;
 }
 
 interface SetSearchLocationModalProps {
