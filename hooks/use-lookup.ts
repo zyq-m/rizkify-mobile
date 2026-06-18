@@ -40,12 +40,7 @@ export const useLookup = () => {
         { id: '1', label: 'Today', value: dayjs().format('YYYY-MM-DD') },
         { id: '2', label: 'Tomorrow', value: dayjs().add(1, 'day').format('YYYY-MM-DD') },
         { id: '3', label: 'This Week', value: dayjs().endOf('week').format('YYYY-MM-DD') },
-        {
-          id: '4',
-          label: 'Next Week',
-          value: dayjs().add(1, 'week').endOf('week').format('YYYY-MM-DD'),
-        },
-        { id: '5', label: 'This Month', value: dayjs().endOf('month').format('YYYY-MM-DD') },
+        { id: '4', label: 'This Month', value: dayjs().endOf('month').format('YYYY-MM-DD') },
       ]),
   });
 
