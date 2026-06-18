@@ -1,0 +1,31 @@
+export interface GeoSearchResult {
+  latitude: number;
+  longitude: number;
+  displayName: string;
+}
+
+export async function searchLocations(
+  query: string,
+  limit: number = 5
+): Promise<GeoSearchResult[]> {
+  if (!query.trim()) return [];
+
+  const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=${limit}`;
+
+  const res = await fetch(url, {
+    headers: {
+      'User-Agent': 'Rizkify/1.0',
+      Accept: 'application/json',
+    },
+  });
+
+  const data = await res.json();
+
+  if (!Array.isArray(data)) return [];
+
+  return data.map((item: any) => ({
+    latitude: parseFloat(item.lat),
+    longitude: parseFloat(item.lon),
+    displayName: item.display_name,
+  }));
+}

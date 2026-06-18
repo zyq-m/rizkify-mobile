@@ -43,6 +43,7 @@ interface LeafletMapProps {
   initialRegion: { latitude: number; longitude: number; zoom?: number };
   interactive?: boolean;
   onPress?: (coords: Coords) => void;
+  onRegionChange?: (coords: Coords) => void;
   onReady?: () => void;
   marker?: { latitude: number; longitude: number; html?: string } | null;
   circle?: {
@@ -157,8 +158,17 @@ const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>((props, ref) =>
           props.onPress?.({ latitude: touch.lat, longitude: touch.lng });
         }
       }
+      if (
+        message.event === WebViewLeafletEvents.ON_MOVE_END ||
+        message.event === WebViewLeafletEvents.ON_ZOOM_END
+      ) {
+        const center = message.payload?.mapCenterPosition;
+        if (center) {
+          props.onRegionChange?.({ latitude: center.lat, longitude: center.lng });
+        }
+      }
     },
-    [props.onPress, props.onReady]
+    [props.onPress, props.onRegionChange, props.onReady]
   );
 
   useImperativeHandle(ref, () => ({

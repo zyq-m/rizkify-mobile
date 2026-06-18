@@ -105,7 +105,7 @@ export default function HomeScreen() {
         onClose={() => setShowLocationModal(false)}
         onLocationSet={handleSetLocation}
         initialLocation={profile?.location}
-        hideRange={true}
+        // hideRange={true}
       />
     </View>
   );
