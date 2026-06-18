@@ -1,3 +1,4 @@
+import ConfirmDialog from '@/components/custom/confirm-dialog';
 import { ItemRequestStatus, RequestItem } from '@/api/service';
 import { useItems } from '@/hooks/use-items';
 import dayjs from 'dayjs';
@@ -36,6 +37,11 @@ export default function ItemRequest() {
   const router = useRouter();
   const [filter, setFilter] = useState<'all' | ItemRequestStatus>('all');
   const [showFilterModal, setShowFilterModal] = useState(false);
+  const [statusChange, setStatusChange] = useState<{
+    visible: boolean;
+    requestId: string;
+    newStatus: ItemRequestStatus;
+  }>({ visible: false, requestId: '', newStatus: 'PENDING' });
 
   const { useItem, useUpdateRequest } = useItems();
   const { data: item, error, isPending, refetch, isRefetching } = useItem(itemId);
@@ -46,31 +52,7 @@ export default function ItemRequest() {
   };
 
   const handleStatusChange = async (requestId: string, newStatus: ItemRequestStatus) => {
-    Alert.alert(
-      'Change Status',
-      `Are you sure you want to mark this request as ${newStatus.toLowerCase()}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Confirm',
-          style: 'default',
-          onPress: async () => {
-            // Implement API call to update request status
-            requestItem.mutate(
-              {
-                id: requestId,
-                status: newStatus,
-              },
-              {
-                onSuccess: () => {
-                  refetch();
-                },
-              }
-            );
-          },
-        },
-      ]
-    );
+    setStatusChange({ visible: true, requestId, newStatus });
   };
 
   const handleContact = (requestId: string) => {
@@ -395,6 +377,20 @@ export default function ItemRequest() {
           </View>
         </View>
       </Modal>
+      <ConfirmDialog
+        visible={statusChange.visible}
+        title="Change Status"
+        message={`Are you sure you want to mark this request as ${statusChange.newStatus.toLowerCase()}?`}
+        onConfirm={() => {
+          const { requestId: rid, newStatus: ns } = statusChange;
+          setStatusChange({ visible: false, requestId: '', newStatus: 'PENDING' });
+          requestItem.mutate(
+            { id: rid, status: ns },
+            { onSuccess: () => refetch() }
+          );
+        }}
+        onCancel={() => setStatusChange({ visible: false, requestId: '', newStatus: 'PENDING' })}
+      />
     </View>
   );
 }

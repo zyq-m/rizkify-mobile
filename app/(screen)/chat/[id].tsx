@@ -1,3 +1,4 @@
+import ConfirmDialog from '@/components/custom/confirm-dialog';
 import { useChat } from '@/hooks/use-chat';
 import { useItems } from '@/hooks/use-items';
 import { useAuthStore } from '@/store/auth-store';
@@ -42,6 +43,10 @@ export default function ChatScreen() {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [statusChange, setStatusChange] = useState<{ visible: boolean; newStatus: string }>({
+    visible: false,
+    newStatus: '',
+  });
 
   const {
     useMessages,
@@ -189,17 +194,7 @@ export default function ChatScreen() {
   const isProvider = conversationData && currentUserId === conversationData.providerId;
 
   const handleStatusChange = (newStatus: string) => {
-    Alert.alert(
-      'Change Status',
-      `Are you sure you want to mark this request as ${newStatus.toLowerCase()}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Confirm',
-          onPress: () => updateRequest({ id: requestId, status: newStatus as any }),
-        },
-      ]
-    );
+    setStatusChange({ visible: true, newStatus });
   };
 
   const formatMessageTime = (timestamp: Date) => {
@@ -417,6 +412,16 @@ export default function ChatScreen() {
           </View>
         </View>
       </View>
+      <ConfirmDialog
+        visible={statusChange.visible}
+        title="Change Status"
+        message={`Are you sure you want to mark this request as ${statusChange.newStatus.toLowerCase()}?`}
+        onConfirm={() => {
+          setStatusChange({ visible: false, newStatus: '' });
+          updateRequest({ id: requestId, status: statusChange.newStatus as any });
+        }}
+        onCancel={() => setStatusChange({ visible: false, newStatus: '' })}
+      />
     </View>
   );
 }

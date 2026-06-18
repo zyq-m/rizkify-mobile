@@ -1,4 +1,4 @@
-import CustomMap from '@/components/custom/custom-map';
+import ItemLocationMap from '@/components/custom/item-location-map';
 import { useChat } from '@/hooks/use-chat';
 import { useItems } from '@/hooks/use-items';
 import { useAuthStore } from '@/store/auth-store';
@@ -289,7 +289,7 @@ export default function ItemDetails() {
             </View>
             <View className="mt-3 overflow-hidden rounded-lg border border-gray-200">
               <View className="h-48">
-                <CustomMap {...item.location} />
+                <ItemLocationMap latitude={item.location.latitude} longitude={item.location.longitude} />
               </View>
               <View className="border-t border-gray-200 p-3">
                 <Text className="text-sm font-medium text-gray-900">{item.location.address}</Text>

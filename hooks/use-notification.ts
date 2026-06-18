@@ -80,7 +80,7 @@ async function registerForPushNotificationsAsync() {
       const { status } = await Notifications.requestPermissionsAsync();
       finalStatus = status;
     }
-    if (finalStatus !== 'granted') {
+    if (finalStatus !== 'granted' && Platform.OS !== 'web') {
       alert('Failed to get push token for push notification!');
       return;
     }
@@ -96,12 +96,13 @@ async function registerForPushNotificationsAsync() {
           projectId,
         })
       ).data;
-      console.log(token);
     } catch (e) {
       token = `${e}`;
     }
   } else {
-    alert('Must use physical device for Push Notifications');
+    if (Platform.OS !== 'web') {
+      alert('Must use physical device for Push Notifications');
+    }
   }
 
   return token;

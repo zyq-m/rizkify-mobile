@@ -1,3 +1,4 @@
+import ConfirmDialog from '@/components/custom/confirm-dialog';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Camera, ChevronRight, X } from 'lucide-react-native';
@@ -56,6 +57,7 @@ export default function EditItemScreen() {
   const [coords, setCoords] = useState<SearchLocation | null>(null);
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   // Load item data when component mounts
   useEffect(() => {
@@ -431,16 +433,7 @@ export default function EditItemScreen() {
           </Pressable>
 
           <Pressable
-            onPress={() => {
-              Alert.alert(
-                'Cancel Editing',
-                'Are you sure you want to cancel? Your changes will be lost.',
-                [
-                  { text: 'Continue Editing', style: 'cancel' },
-                  { text: 'Discard Changes', style: 'destructive', onPress: handleBack },
-                ]
-              );
-            }}
+            onPress={() => setShowCancelDialog(true)}
             className="items-center rounded-lg border border-gray-300 py-3">
             <Text className="text-base font-medium text-gray-700">Cancel</Text>
           </Pressable>
@@ -454,6 +447,18 @@ export default function EditItemScreen() {
         onLocationSet={(e) => setCoords(e)}
         onClose={() => setModal(false)}
         hideRange
+      />
+      <ConfirmDialog
+        visible={showCancelDialog}
+        title="Cancel Editing"
+        message="Are you sure you want to cancel? Your changes will be lost."
+        confirmText="Discard Changes"
+        confirmDestructive
+        onConfirm={() => {
+          setShowCancelDialog(false);
+          handleBack();
+        }}
+        onCancel={() => setShowCancelDialog(false)}
       />
     </View>
   );

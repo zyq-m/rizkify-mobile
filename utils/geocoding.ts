@@ -17,9 +17,9 @@ export async function searchLocations(
 
   if (Platform.OS === 'web') {
     url = `https://corsproxy.io/?${encodeURIComponent(nominatimUrl)}`;
+  } else {
+    url = nominatimUrl;
   }
-
-  url = nominatimUrl;
 
   const res = await fetch(url, {
     headers: {
@@ -28,7 +28,14 @@ export async function searchLocations(
     },
   });
 
-  const data = await res.json();
+  const text = await res.text();
+  let data: any;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    console.error('Nominatim returned non-JSON:', text.slice(0, 200));
+    return [];
+  }
 
   if (!Array.isArray(data)) return [];
 

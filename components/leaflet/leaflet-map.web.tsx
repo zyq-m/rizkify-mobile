@@ -141,7 +141,7 @@ const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>((props, ref) =>
         {mainMarker && (
           <Marker
             position={[mainMarker.latitude, mainMarker.longitude]}
-            icon={mainIcon}
+            {...(mainIcon ? { icon: mainIcon } : {})}
           />
         )}
         {userPos && (

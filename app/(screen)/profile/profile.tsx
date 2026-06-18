@@ -1,3 +1,4 @@
+import ConfirmDialog from '@/components/custom/confirm-dialog';
 import CustomHeader from '@/components/custom/custom-header';
 import SetSearchLocationModal, { SearchLocation } from '@/components/custom/set-location-v2';
 import { useAuth } from '@/hooks/use-auth';
@@ -25,6 +26,7 @@ export default function Profile() {
   const { mutate: updateLocation } = useUpdateProfile();
 
   const [showLocationModal, setShow] = useState(false);
+  const [showLogout, setShowLogout] = useState(false);
   const menuSections = [
     {
       title: 'Account',
@@ -69,20 +71,7 @@ export default function Profile() {
   ];
 
   const handleLogout = () => {
-    Alert.alert('Log Out', 'Are you sure you want to log out?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Log Out',
-        style: 'destructive',
-        onPress: () => {
-          logout(undefined, {
-            onError: (err) => {
-              Alert.alert('Error', err.message);
-            },
-          });
-        },
-      },
-    ]);
+    setShowLogout(true);
   };
 
   const handleChangeLocation = (location: SearchLocation) => {
@@ -224,6 +213,22 @@ export default function Profile() {
         onClose={() => setShow(false)}
         onLocationSet={handleChangeLocation}
         hideRange
+      />
+      <ConfirmDialog
+        visible={showLogout}
+        title="Log Out"
+        message="Are you sure you want to log out?"
+        confirmText="Log Out"
+        confirmDestructive
+        onConfirm={() => {
+          setShowLogout(false);
+          logout(undefined, {
+            onError: (err) => {
+              Alert.alert('Error', err.message);
+            },
+          });
+        }}
+        onCancel={() => setShowLogout(false)}
       />
     </View>
   );
