@@ -34,7 +34,7 @@ export default function InputForm({
           {...props}
           className="flex-1 py-4 text-base text-gray-900"
           placeholderTextColor="#9CA3AF"
-          style={{ fontSize: 14 }}
+          style={{ fontSize: 14, flex: 1, paddingBlock: 16 }}
         />
         {icon && <View className="ml-2">{icon}</View>}
       </View>
