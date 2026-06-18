@@ -12,6 +12,7 @@ export function useServiceWorker(): UseServiceWorkerResult {
 
   useEffect(() => {
     if (Platform.OS !== 'web') return;
+    if (process.env.NODE_ENV !== 'production') return;
     if (!('serviceWorker' in navigator)) return;
 
     navigator.serviceWorker.register('/service-worker.js').then((registration) => {

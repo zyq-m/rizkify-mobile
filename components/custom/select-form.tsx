@@ -1,7 +1,7 @@
 import { Picker, PickerItemProps, PickerProps } from '@react-native-picker/picker';
 
 import { ReactNode } from 'react';
-import { Text, View } from 'react-native';
+import { Platform, Text, View } from 'react-native';
 import { FormError } from './input-form';
 
 export type SelectFormProps = PickerProps &
@@ -34,13 +34,14 @@ export default function SelectFrom({
           style={{
             fontSize: 14,
             color: props.selectedValue ? '#1F2937' : '#6B7280',
+            ...(Platform.OS === 'web' ? { padding: 16 } : {}),
           }}
           mode="dropdown" // This makes it look much cleaner on Android
         >
           <Picker.Item label={placeholder} value={null} color="#6B7280" style={{ fontSize: 14 }} />
-          {selectItems.map((item) => (
+          {selectItems.map((item, index) => (
             <Picker.Item
-              key={item.value?.toString()}
+              key={index}
               label={item.label}
               value={item.value}
               color="#1F2937"
