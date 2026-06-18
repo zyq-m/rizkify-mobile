@@ -429,10 +429,11 @@ export const useItems = () => {
           if (updateItemError) throw updateItemError;
         }
       },
-      onSuccess: () => {
+      onSuccess: (_, variables) => {
         queryClient.invalidateQueries({ queryKey: ['reqItem'] });
         queryClient.invalidateQueries({ queryKey: ['items'] });
         queryClient.invalidateQueries({ queryKey: ['user', 'items'] });
+        queryClient.invalidateQueries({ queryKey: ['chat', 'messages', variables.id] });
       },
     });
   };

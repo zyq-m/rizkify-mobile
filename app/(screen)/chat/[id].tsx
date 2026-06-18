@@ -1,8 +1,9 @@
 import { useChat } from '@/hooks/use-chat';
+import { useItems } from '@/hooks/use-items';
 import { useAuthStore } from '@/store/auth-store';
 import dayjs from 'dayjs';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, Check, CheckCheck, MoreVertical, Send, User } from 'lucide-react-native';
+import { ArrowLeft, Check, CheckCheck, Send, User } from 'lucide-react-native';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
@@ -58,6 +59,10 @@ export default function ChatScreen() {
   // Send message mutation
   const sendMessageMutation = useSendMessage();
   const { mutate: markAsRead } = useMarkMessagesAsRead();
+
+  // Request status mutation
+  const { useUpdateRequest } = useItems();
+  const { mutate: updateRequest, isPending: isUpdating } = useUpdateRequest();
 
   // Handle real-time messages
   const handleNewMessage = useCallback(
@@ -181,6 +186,22 @@ export default function ChatScreen() {
     router.back();
   };
 
+  const isProvider = conversationData && currentUserId === conversationData.providerId;
+
+  const handleStatusChange = (newStatus: string) => {
+    Alert.alert(
+      'Change Status',
+      `Are you sure you want to mark this request as ${newStatus.toLowerCase()}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Confirm',
+          onPress: () => updateRequest({ id: requestId, status: newStatus as any }),
+        },
+      ]
+    );
+  };
+
   const formatMessageTime = (timestamp: Date) => {
     return dayjs(timestamp).format('HH:mm');
   };
@@ -239,12 +260,6 @@ export default function ChatScreen() {
               </Text>
             </View>
           </View>
-
-          <View>
-            <Pressable className="p-2">
-              <MoreVertical size={20} color="#6B7280" />
-            </Pressable>
-          </View>
         </View>
 
         {/* Request Status Banner */}
@@ -262,7 +277,8 @@ export default function ChatScreen() {
               className={`rounded-full px-2 py-1 ${
                 conversationData.status === 'PENDING'
                   ? 'bg-yellow-100'
-                  : conversationData.status === 'APPROVED'
+                  : conversationData.status === 'APPROVED' ||
+                      conversationData.status === 'COMPLETED'
                     ? 'bg-green-100'
                     : conversationData.status === 'REJECTED'
                       ? 'bg-red-100'
@@ -272,7 +288,8 @@ export default function ChatScreen() {
                 className={`text-xs font-medium ${
                   conversationData.status === 'PENDING'
                     ? 'text-yellow-800'
-                    : conversationData.status === 'APPROVED'
+                    : conversationData.status === 'APPROVED' ||
+                        conversationData.status === 'COMPLETED'
                       ? 'text-green-800'
                       : conversationData.status === 'REJECTED'
                         ? 'text-red-800'
@@ -282,6 +299,27 @@ export default function ChatScreen() {
               </Text>
             </View>
           </View>
+
+          {/* Action Buttons */}
+          {isProvider &&
+            (conversationData.status === 'PENDING' || conversationData.status === 'APPROVED') && (
+              <View className="mt-3 flex-row gap-2">
+                <Pressable
+                  onPress={() => handleStatusChange('COMPLETED')}
+                  disabled={isUpdating}
+                  className="flex-1 rounded-lg bg-emerald-100 px-3 py-2 active:bg-emerald-200">
+                  <Text className="text-center text-sm font-medium text-green-800">
+                    Mark as Complete
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => handleStatusChange('REJECTED')}
+                  disabled={isUpdating}
+                  className="flex-1 rounded-lg bg-red-100 px-3 py-2 active:bg-red-200">
+                  <Text className="text-center text-sm font-medium text-red-800">Reject</Text>
+                </Pressable>
+              </View>
+            )}
         </View>
       </View>
 
