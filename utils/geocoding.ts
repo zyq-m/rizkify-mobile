@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 export interface GeoSearchResult {
   latitude: number;
   longitude: number;
@@ -10,7 +12,14 @@ export async function searchLocations(
 ): Promise<GeoSearchResult[]> {
   if (!query.trim()) return [];
 
-  const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=${limit}`;
+  const nominatimUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=${limit}`;
+  let url;
+
+  if (Platform.OS === 'web') {
+    url = `https://corsproxy.io/?${encodeURIComponent(nominatimUrl)}`;
+  }
+
+  url = nominatimUrl;
 
   const res = await fetch(url, {
     headers: {

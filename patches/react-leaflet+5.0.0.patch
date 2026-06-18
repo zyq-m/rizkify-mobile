@@ -1,0 +1,12 @@
+diff --git a/node_modules/react-leaflet/lib/MapContainer.js b/node_modules/react-leaflet/lib/MapContainer.js
+index d19208d..872c2fd 100644
+--- a/node_modules/react-leaflet/lib/MapContainer.js
++++ b/node_modules/react-leaflet/lib/MapContainer.js
+@@ -31,6 +31,7 @@ function MapContainerComponent({ bounds, boundsOptions, center, children, classN
+     useEffect(()=>{
+         return ()=>{
+             context?.map.remove();
++            mapInstanceRef.current = undefined;
+         };
+     }, [
+         context

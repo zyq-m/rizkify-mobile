@@ -19,9 +19,11 @@ export default function CustomMap(props: Coords) {
   useEffect(() => {
     if (props.latitude && props.longitude) {
       const timer = setTimeout(() => {
-        mapRef.current?.animateToRegion(
-          { latitude: props.latitude, longitude: props.longitude, zoom: 14 }
-        );
+        mapRef.current?.animateToRegion({
+          latitude: props.latitude,
+          longitude: props.longitude,
+          zoom: 14,
+        });
       }, 100);
       return () => clearTimeout(timer);
     }
@@ -38,7 +40,11 @@ export default function CustomMap(props: Coords) {
           zoom: 14,
         }}
         interactive={false}
-        marker={props.latitude && props.longitude ? { latitude: props.latitude, longitude: props.longitude } : null}
+        marker={
+          props.latitude && props.longitude
+            ? { latitude: props.latitude, longitude: props.longitude }
+            : null
+        }
       />
     </View>
   );

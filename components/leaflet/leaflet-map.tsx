@@ -20,23 +20,8 @@ import {
   WebViewLeafletEvents,
   WebviewLeafletMessage,
 } from 'react-native-leaflet-view';
-import { Coords } from './types';
-
-export interface LeafletMapHandle {
-  animateToRegion: (region: { latitude: number; longitude: number; zoom?: number }) => void;
-  setMarker: (marker: { latitude: number; longitude: number; html?: string } | null) => void;
-  setCircle: (
-    circle: {
-      latitude: number;
-      longitude: number;
-      radius: number;
-      fillColor?: string;
-      strokeColor?: string;
-      strokeWidth?: number;
-    } | null
-  ) => void;
-  setUserLocation: (coords: Coords | null) => void;
-}
+import { Coords, LeafletMapHandle } from './types';
+export { type LeafletMapHandle };
 
 interface LeafletMapProps {
   style?: StyleProp<ViewStyle>;
