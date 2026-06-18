@@ -20,9 +20,10 @@ import React, { useState } from 'react';
 import { Alert, Image, Pressable, ScrollView, Text, View } from 'react-native';
 
 export default function Profile() {
-  const { useProfile, useUpdateProfile } = useUser();
+  const { useProfile, useUpdateProfile, useUserStats } = useUser();
   const { mutate: logout } = useAuth().logout;
   const { data: profile } = useProfile();
+  const { data: stats } = useUserStats();
   const { mutate: updateLocation } = useUpdateProfile();
 
   const [showLocationModal, setShow] = useState(false);
@@ -148,15 +149,15 @@ export default function Profile() {
             </Text>
             <View className="flex-row justify-between gap-4">
               <View className="flex-1 items-center">
-                <Text className="text-2xl font-bold text-yellow-600">{24}</Text>
+                <Text className="text-2xl font-bold text-yellow-600">{stats?.itemsShared ?? 0}</Text>
                 <Text className="mt-1 text-center text-xs text-gray-600">Items Shared</Text>
               </View>
               <View className="flex-1 items-center">
-                <Text className="text-2xl font-bold text-emerald-600">{12}</Text>
+                <Text className="text-2xl font-bold text-emerald-600">{stats?.itemsReceived ?? 0}</Text>
                 <Text className="mt-1 text-center text-xs text-gray-600">Items Received</Text>
               </View>
               <View className="flex-1 items-center">
-                <Text className="text-2xl font-bold text-blue-600">{36}</Text>
+                <Text className="text-2xl font-bold text-blue-600">{stats?.totalImpact ?? 0}</Text>
                 <Text className="mt-1 text-center text-xs text-gray-600">Total Impact</Text>
               </View>
             </View>

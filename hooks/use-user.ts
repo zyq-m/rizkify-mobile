@@ -142,6 +142,29 @@ export const useUser = () => {
     });
   };
 
+  const useUserStats = () => {
+    return useQuery({
+      queryKey: ['user', 'stats', user?.id],
+      queryFn: async () => {
+        if (!user?.id) return { itemsShared: 0, itemsReceived: 0, totalImpact: 0 };
+
+        const [sharedResult, receivedResult] = await Promise.all([
+          supabase.from('items').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+          supabase
+            .from('item_requests')
+            .select('*', { count: 'exact', head: true })
+            .eq('requester_id', user.id)
+            .eq('status', 'COMPLETED'),
+        ]);
+
+        const itemsShared = sharedResult.count ?? 0;
+        const itemsReceived = receivedResult.count ?? 0;
+        return { itemsShared, itemsReceived, totalImpact: itemsShared + itemsReceived };
+      },
+      enabled: !!user?.id,
+    });
+  };
+
   const useUpdateRequestStatus = () => {
     return useMutation({
       mutationFn: async ({ requestId, status }: { requestId: string; status: string }) => {
@@ -167,5 +190,6 @@ export const useUser = () => {
     useMyRequests,
     useReceivedRequests,
     useUpdateRequestStatus,
+    useUserStats,
   };
 };
