@@ -4,11 +4,7 @@
     "slug": "rizkify",
     "version": "1.0.0",
     "scheme": "rizkify",
-    "platforms": [
-      "ios",
-      "android",
-      "web"
-    ],
+    "platforms": ["ios", "android", "web"],
     "web": {
       "bundler": "metro",
       "output": "single",
@@ -25,15 +21,7 @@
       "expo-font",
       "expo-web-browser",
       "expo-notifications",
-      "expo-asset",
-      [
-        "expo-build-properties",
-        {
-          "android": {
-            "extraProguardRules": "-keep class com.swmansion.reanimated.** { *; }\n-keep class com.swmansion.gesturehandler.** { *; }\n-keepclassmembers class * implements java.io.Serializable { *; }"
-          }
-        }
-      ]
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -47,9 +35,7 @@
       "image": "./assets/splash.png",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true
     },
