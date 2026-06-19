@@ -7,6 +7,6 @@ const { withNativeWind } = require('nativewind/metro');
 
 const config = getDefaultConfig(__dirname);
 
-config.resolver.unstable_conditionNames = ['browser', 'require', 'react-native'];
+config.resolver.unstable_conditionNames = ['require', 'react-native']; // removed 'browser' to avoid incorrect module resolution
 
 module.exports = withNativeWind(config, { input: './global.css', inlineRem: 16 });
