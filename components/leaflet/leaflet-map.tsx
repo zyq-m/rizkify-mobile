@@ -1,5 +1,5 @@
 import { Asset } from 'expo-asset';
-import { File } from 'expo-file-system';
+import * as FileSystem from 'expo-file-system';
 import React, {
   forwardRef,
   useCallback,
@@ -106,7 +106,7 @@ const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>((props, ref) =>
       try {
         const asset = Asset.fromModule(require('../../assets/leaflet.html'));
         await asset.downloadAsync();
-        const content = await new File(asset.localUri!).text();
+        const content = await FileSystem.readAsStringAsync(asset.localUri!);
         if (mounted) setHtmlContent(content);
       } catch (error) {
         console.error('Failed to load leaflet HTML:', error);
