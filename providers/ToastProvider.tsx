@@ -6,7 +6,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
 type ToastType = 'success' | 'error' | 'info' | 'warning';
 
@@ -80,24 +80,28 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <ToastContext.Provider value={{ showToast }}>
-      <View style={{ flex: 1, position: 'relative' }}>
+      <View style={{ flex: 1 }}>
         {children}
-        {toast && Icon && accentColor && (
-          <Animated.View
-            style={[styles.toast, { opacity, transform: [{ translateY }] }]}
-          >
-            <Pressable onPress={hide} style={styles.pressable}>
-              <View style={[styles.accent, { backgroundColor: accentColor }]} />
-              <Icon size={20} color={accentColor} />
-              <View style={styles.textContainer}>
-                <Text style={styles.title}>{toast.title}</Text>
-                {toast.message && <Text style={styles.message}>{toast.message}</Text>}
-              </View>
-              <X size={16} color="#9CA3AF" />
-            </Pressable>
-          </Animated.View>
-        )}
       </View>
+      <Modal transparent visible={!!toast} animationType="none" statusBarTranslucent>
+        <Pressable onPress={hide} style={StyleSheet.absoluteFill}>
+          {toast && Icon && accentColor && (
+            <Animated.View
+              style={[styles.toast, { opacity, transform: [{ translateY }] }]}
+            >
+              <Pressable onPress={hide} style={styles.pressable}>
+                <View style={[styles.accent, { backgroundColor: accentColor }]} />
+                <Icon size={20} color={accentColor} />
+                <View style={styles.textContainer}>
+                  <Text style={styles.title}>{toast.title}</Text>
+                  {toast.message && <Text style={styles.message}>{toast.message}</Text>}
+                </View>
+                <X size={16} color="#9CA3AF" />
+              </Pressable>
+            </Animated.View>
+          )}
+        </Pressable>
+      </Modal>
     </ToastContext.Provider>
   );
 }
