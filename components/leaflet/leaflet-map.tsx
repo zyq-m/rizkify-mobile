@@ -1,3 +1,4 @@
+import { useToast } from '@/providers/ToastProvider';
 import { Asset } from 'expo-asset';
 import * as FileSystem from 'expo-file-system';
 import React, {
@@ -20,7 +21,6 @@ import {
   WebViewLeafletEvents,
   WebviewLeafletMessage,
 } from 'react-native-leaflet-view';
-import { useToast } from '@/providers/ToastProvider';
 import { Coords, LeafletMapHandle } from './types';
 export { type LeafletMapHandle };
 
@@ -107,11 +107,21 @@ const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>((props, ref) =>
     const loadHtml = async () => {
       try {
         const asset = Asset.fromModule(require('../../assets/leaflet.html'));
-        const content = await FileSystem.readAsStringAsync(asset.uri);
+
+        const timeout = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Map load timed out')), 10000)
+        );
+        await Promise.race([asset.downloadAsync(), timeout]);
+
+        const content = await FileSystem.readAsStringAsync(asset.localUri!);
+
         if (mounted) setHtmlContent(content);
       } catch (error) {
         console.error('Failed to load leaflet HTML:', error);
-        showToast('error', 'Map Error', 'Failed to load map. Please try again.');
+        const msg = (error as Error)?.message?.includes('timed out')
+          ? 'Map took too long to load. Please check your connection.'
+          : 'Failed to load map. Please try again.';
+        showToast('error', 'Map Error', msg);
       }
     };
     loadHtml();
