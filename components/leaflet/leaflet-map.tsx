@@ -107,7 +107,12 @@ const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>((props, ref) =>
     const loadHtml = async () => {
       try {
         const asset = Asset.fromModule(require('../../assets/leaflet.html'));
-        const content = await FileSystem.readAsStringAsync(asset.uri);
+        let uri = asset.localUri || asset.uri;
+        if (!uri.startsWith('file://') && !uri.startsWith('asset://')) {
+          await asset.downloadAsync();
+          uri = asset.localUri!;
+        }
+        const content = await FileSystem.readAsStringAsync(uri);
         if (mounted) setHtmlContent(content);
       } catch (error) {
         console.error('Failed to load leaflet HTML:', error);
