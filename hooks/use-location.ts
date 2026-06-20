@@ -67,8 +67,6 @@ export default function useLocation() {
       );
       const data = await res.json();
 
-      console.log(data);
-
       if (data?.display_name) {
         return {
           formatted: data.display_name,
