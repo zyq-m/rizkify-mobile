@@ -20,6 +20,7 @@ import {
   WebViewLeafletEvents,
   WebviewLeafletMessage,
 } from 'react-native-leaflet-view';
+import { useToast } from '@/providers/ToastProvider';
 import { Coords, LeafletMapHandle } from './types';
 export { type LeafletMapHandle };
 
@@ -99,6 +100,7 @@ const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>((props, ref) =>
   const [internalCenter, setInternalCenter] = useState(() => toLatLng(props.initialRegion));
   const [internalZoom, setInternalZoom] = useState(props.initialRegion.zoom ?? 12);
   const [userMarker, setUserMarker] = useState<OwnPositionMarker | undefined>(undefined);
+  const { showToast } = useToast();
 
   useEffect(() => {
     let mounted = true;
@@ -110,6 +112,7 @@ const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>((props, ref) =>
         if (mounted) setHtmlContent(content);
       } catch (error) {
         console.error('Failed to load leaflet HTML:', error);
+        showToast('error', 'Map Error', 'Failed to load map. Please try again.');
       }
     };
     loadHtml();
